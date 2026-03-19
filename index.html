@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Análise 360° Pro — Dashboard Comercial</title>
+<title>Análise 360° Pro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -14,222 +14,294 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
+/* ─────────────────────── TOKENS ─────────────────────── */
 :root{
-  --bg:hsl(220,18%,97%);--fg:hsl(220,25%,12%);--card:hsl(0,0%,100%);
-  --primary:hsl(224,71%,50%);--primary-fg:#fff;--primary-glow:hsla(224,71%,50%,.35);
-  --secondary:hsl(220,14%,91%);--muted:hsl(220,14%,91%);--muted-fg:hsl(215,14%,48%);
-  --accent:hsl(220,14%,88%);--border:hsl(220,13%,87%);--ring:hsl(224,71%,50%);
-  --success:hsl(142,71%,35%);--success-light:hsla(142,71%,35%,.12);--success-glow:hsla(142,71%,45%,.4);
-  --warning:hsl(38,92%,45%);--warning-light:hsla(38,92%,45%,.12);
-  --danger:hsl(4,86%,48%);--danger-light:hsla(4,86%,48%,.12);--danger-glow:hsla(4,86%,58%,.4);
-  --surface:hsl(220,14%,94%);--chart-text:hsl(220,14%,40%);--chart-grid:hsl(220,13%,87%);
-  --radius:.875rem;--radius-sm:.5rem;
-  --shadow-sm:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
-  --shadow-md:0 4px 16px rgba(0,0,0,.1),0 2px 6px rgba(0,0,0,.06);
-  --shadow-lg:0 10px 40px rgba(0,0,0,.14),0 4px 12px rgba(0,0,0,.08);
-  --shadow-p:0 6px 24px var(--primary-glow);
-  --shadow-s:0 6px 20px var(--success-glow);
+  --bg:#f4f5f8;--fg:#0f1623;--card:#ffffff;
+  --p:hsl(224,71%,50%);--pg:hsla(224,71%,50%,.32);
+  --p2:hsl(250,70%,58%);--p3:hsl(280,65%,60%);
+  --sec:#e8eaf0;--muted:#e4e6ed;--mfg:#5a6478;
+  --acc:#dde0e9;--brd:#dde0e9;
+  --s:hsl(142,64%,34%);--sg:hsla(142,64%,40%,.38);--sl:hsla(142,64%,34%,.11);
+  --w:hsl(38,90%,44%);--wl:hsla(38,90%,44%,.12);
+  --d:hsl(4,82%,47%);--dg:hsla(4,82%,55%,.38);--dl:hsla(4,82%,47%,.11);
+  --surf:#eef0f5;--ctxt:#4a5568;--cgrid:#dde0e9;
+  --r:.875rem;--rsm:.5rem;
+  --sh1:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --sh2:0 4px 16px rgba(0,0,0,.09),0 2px 6px rgba(0,0,0,.05);
+  --sh3:0 10px 40px rgba(0,0,0,.13),0 4px 12px rgba(0,0,0,.07);
+  --shp:0 6px 24px var(--pg);--shs:0 6px 20px var(--sg);
 }
 .dark{
-  --bg:hsl(224,20%,10%);--fg:hsl(215,25%,92%);--card:hsl(224,18%,14%);
-  --primary:hsl(224,80%,62%);--primary-glow:hsla(224,80%,62%,.4);
-  --secondary:hsl(224,15%,20%);--muted:hsl(224,15%,20%);--muted-fg:hsl(215,14%,58%);
-  --accent:hsl(224,15%,25%);--border:hsl(224,14%,22%);
-  --success:hsl(142,60%,45%);--success-light:hsla(142,60%,45%,.15);--success-glow:hsla(142,60%,50%,.45);
-  --warning:hsl(38,85%,55%);--warning-light:hsla(38,85%,55%,.15);
-  --danger:hsl(4,80%,55%);--danger-light:hsla(4,80%,55%,.15);--danger-glow:hsla(4,80%,60%,.45);
-  --surface:hsl(224,18%,17%);--chart-text:hsl(215,18%,72%);--chart-grid:hsl(224,14%,25%);
-  --shadow-sm:0 1px 3px rgba(0,0,0,.3);--shadow-md:0 4px 16px rgba(0,0,0,.4);--shadow-lg:0 10px 40px rgba(0,0,0,.5);
+  --bg:hsl(224,22%,9%);--fg:hsl(215,25%,92%);--card:hsl(224,20%,13%);
+  --p:hsl(224,78%,63%);--pg:hsla(224,78%,63%,.38);
+  --sec:hsl(224,16%,19%);--muted:hsl(224,16%,19%);--mfg:hsl(215,16%,57%);
+  --acc:hsl(224,16%,24%);--brd:hsl(224,15%,21%);
+  --s:hsl(142,58%,44%);--sg:hsla(142,58%,50%,.42);--sl:hsla(142,58%,44%,.14);
+  --w:hsl(38,84%,54%);--wl:hsla(38,84%,54%,.14);
+  --d:hsl(4,78%,54%);--dg:hsla(4,78%,60%,.42);--dl:hsla(4,78%,54%,.14);
+  --surf:hsl(224,20%,16%);--ctxt:hsl(215,18%,70%);--cgrid:hsl(224,15%,24%);
+  --sh1:0 1px 3px rgba(0,0,0,.28);--sh2:0 4px 16px rgba(0,0,0,.38);--sh3:0 10px 40px rgba(0,0,0,.48);
 }
+/* ─────────────────────── BASE ─────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--fg);min-height:100vh;transition:background .25s,color .25s;-webkit-font-smoothing:antialiased}
-.mono{font-family:'Geist Mono','SF Mono',monospace;font-feature-settings:'tnum';font-variant-numeric:tabular-nums}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--fg);min-height:100vh;-webkit-font-smoothing:antialiased;transition:background .22s,color .22s}
+.mono{font-family:'Geist Mono',monospace;font-variant-numeric:tabular-nums}
 input,button,select{font-family:inherit}
-.max-w{max-width:1360px;margin:0 auto;padding:0 1.5rem}
-main{max-width:1360px;margin:0 auto;padding:2rem 1.5rem}
-.grid{display:grid}
-.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+/* ─────────────────────── LAYOUT ─────────────────────── */
+.wrap{max-width:1380px;margin:0 auto;padding:0 1.5rem}
+main{max-width:1380px;margin:0 auto;padding:1.75rem 1.5rem}
+.g2{display:grid;grid-template-columns:repeat(2,1fr)}
+.g3{display:grid;grid-template-columns:repeat(3,1fr)}
+.g4{display:grid;grid-template-columns:repeat(4,1fr)}
 @media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:640px){.g2,.g3,.g4{grid-template-columns:1fr}.hide-mob{display:none!important}}
-.gap-2{gap:.5rem}.gap-3{gap:.75rem}.gap-4{gap:1rem}.gap-5{gap:1.25rem}.gap-6{gap:1.5rem}
-.flex{display:flex}.items-c{align-items:center}.jc-sb{justify-content:space-between}.f-wrap{flex-wrap:wrap}
-.space-y>*+*{margin-top:1.5rem}.ox{overflow-x:auto}
-/* HEADER */
-header{position:sticky;top:0;z-index:100;background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
-.h-inner{max-width:1360px;margin:0 auto;padding:.625rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
-.logo{width:2.5rem;height:2.5rem;border-radius:.75rem;background:linear-gradient(135deg,var(--primary),hsl(250,70%,60%));display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-p);flex-shrink:0}
-.logo svg{width:1.2rem;height:1.2rem;color:#fff}
-.brand h1{font-size:.95rem;font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:.4rem;line-height:1.2}
-.badge-pro{font-size:.55rem;font-weight:700;background:linear-gradient(135deg,var(--primary),hsl(250,70%,60%));color:#fff;padding:.15rem .5rem;border-radius:999px;letter-spacing:.08em;text-transform:uppercase}
-.brand p{font-size:.65rem;color:var(--muted-fg)}
-/* BUTTONS */
-button{cursor:pointer;border:none;background:none;font-family:inherit;transition:all .18s cubic-bezier(.4,0,.2,1);outline:none}
-button:not(:disabled):active{transform:scale(.96)}
-.btn-p{display:inline-flex;align-items:center;gap:.45rem;padding:.5rem 1rem;border-radius:.625rem;background:linear-gradient(135deg,var(--primary),hsl(250,70%,58%));color:#fff;font-size:.75rem;font-weight:600;box-shadow:var(--shadow-p);position:relative;overflow:hidden}
-.btn-p::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.18),transparent);opacity:0;transition:opacity .18s}
-.btn-p:hover:not(:disabled)::before{opacity:1}
-.btn-p:hover:not(:disabled){box-shadow:0 8px 30px var(--primary-glow);transform:translateY(-1px)}
-.btn-p:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
-.btn-s{display:inline-flex;align-items:center;gap:.45rem;padding:.5rem 1rem;border-radius:.625rem;background:linear-gradient(135deg,var(--success),hsl(160,65%,40%));color:#fff;font-size:.75rem;font-weight:600;box-shadow:var(--shadow-s)}
-.btn-s:hover:not(:disabled){box-shadow:0 8px 28px var(--success-glow);transform:translateY(-1px)}
-.btn-g{display:inline-flex;align-items:center;gap:.45rem;padding:.5rem 1rem;border-radius:.625rem;background:var(--secondary);color:var(--fg);font-size:.75rem;font-weight:500;border:1px solid var(--border)}
-.btn-g:hover:not(:disabled){background:var(--accent)}
-.btn-i{width:2.1rem;height:2.1rem;border-radius:.6rem;display:inline-flex;align-items:center;justify-content:center;background:var(--secondary);color:var(--muted-fg);flex-shrink:0}
-.btn-i:hover{background:var(--accent);color:var(--fg)}
-.btn-i.out:hover{background:var(--danger-light);color:var(--danger)}
-.btn-i svg{width:1rem;height:1rem}
-.btn-proc{width:100%;padding:1rem;border-radius:var(--radius);background:linear-gradient(135deg,var(--primary),hsl(250,70%,58%),hsl(280,65%,60%));background-size:200% 200%;color:#fff;font-weight:700;font-size:.925rem;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:.6rem;box-shadow:var(--shadow-p);animation:gradShift 4s ease infinite;position:relative;overflow:hidden}
-.btn-proc::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);transform:translateX(-100%)}
-.btn-proc:hover:not(:disabled)::after{animation:shimmer .8s ease}
-.btn-proc:hover:not(:disabled){box-shadow:0 12px 40px var(--primary-glow);transform:translateY(-2px)}
-.btn-proc:disabled{opacity:.35;cursor:not-allowed;transform:none;animation:none;box-shadow:none}
-@keyframes gradShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@media(max-width:640px){.g2,.g3,.g4{grid-template-columns:1fr}.hm{display:none!important}}
+.gap2{gap:.5rem}.gap3{gap:.75rem}.gap4{gap:1rem}.gap5{gap:1.25rem}.gap6{gap:1.5rem}
+.sy>*+*{margin-top:1.5rem}
+.ox{overflow-x:auto}
+.flex{display:flex}.ic{align-items:center}.sb{justify-content:space-between}.fw{flex-wrap:wrap}
+/* ─────────────────────── HEADER ─────────────────────── */
+header{position:sticky;top:0;z-index:200;background:color-mix(in srgb,var(--card) 86%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--brd)}
+.hi{max-width:1380px;margin:0 auto;padding:.6rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.logo{width:2.4rem;height:2.4rem;border-radius:.7rem;background:linear-gradient(135deg,var(--p),var(--p2));display:flex;align-items:center;justify-content:center;box-shadow:var(--shp);flex-shrink:0}
+.logo svg{width:1.15rem;height:1.15rem;color:#fff}
+.brand h1{font-size:.9rem;font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:.35rem;line-height:1.2}
+.bpro{font-size:.52rem;font-weight:700;background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;padding:.12rem .45rem;border-radius:999px;letter-spacing:.08em;text-transform:uppercase}
+.brand p{font-size:.62rem;color:var(--mfg);margin-top:1px}
+/* ─────────────────────── BUTTONS ─────────────────────── */
+button{cursor:pointer;border:none;background:none;font-family:inherit;transition:all .17s cubic-bezier(.4,0,.2,1);outline:none}
+button:not(:disabled):active{transform:scale(.96)!important}
+
+/* Primary */
+.bp{display:inline-flex;align-items:center;gap:.4rem;padding:.48rem .95rem;border-radius:.6rem;background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;font-size:.73rem;font-weight:600;box-shadow:var(--shp);position:relative;overflow:hidden}
+.bp::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.16),transparent);opacity:0;transition:opacity .17s}
+.bp:hover:not(:disabled)::after{opacity:1}
+.bp:hover:not(:disabled){box-shadow:0 8px 28px var(--pg);transform:translateY(-1px)}
+.bp:disabled{opacity:.38;cursor:not-allowed;transform:none!important;box-shadow:none}
+
+/* Success */
+.bs{display:inline-flex;align-items:center;gap:.4rem;padding:.48rem .95rem;border-radius:.6rem;background:linear-gradient(135deg,var(--s),hsl(160,58%,38%));color:#fff;font-size:.73rem;font-weight:600;box-shadow:var(--shs)}
+.bs:hover:not(:disabled){box-shadow:0 8px 26px var(--sg);transform:translateY(-1px)}
+
+/* Ghost */
+.bg2{display:inline-flex;align-items:center;gap:.4rem;padding:.48rem .95rem;border-radius:.6rem;background:var(--sec);color:var(--fg);font-size:.73rem;font-weight:500;border:1px solid var(--brd)}
+.bg2:hover:not(:disabled){background:var(--acc);border-color:color-mix(in srgb,var(--brd) 60%,var(--p))}
+
+/* Icon */
+.bi{width:2rem;height:2rem;border-radius:.55rem;display:inline-flex;align-items:center;justify-content:center;background:var(--sec);color:var(--mfg);flex-shrink:0}
+.bi:hover{background:var(--acc);color:var(--fg)}
+.bi.x:hover{background:var(--dl);color:var(--d)}
+.bi svg{width:.95rem;height:.95rem}
+
+/* Process CTA */
+.bproc{width:100%;padding:.95rem;border-radius:var(--r);background:linear-gradient(135deg,var(--p),var(--p2),var(--p3));background-size:200% 200%;color:#fff;font-weight:700;font-size:.9rem;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:.6rem;box-shadow:var(--shp);animation:gshift 4s ease infinite;position:relative;overflow:hidden}
+.bproc::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);transform:translateX(-100%)}
+.bproc:hover:not(:disabled)::after{animation:shimmer .8s ease}
+.bproc:hover:not(:disabled){box-shadow:0 12px 38px var(--pg);transform:translateY(-2px)}
+.bproc:disabled{opacity:.32;cursor:not-allowed;transform:none!important;animation:none;box-shadow:none}
+@keyframes gshift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
 @keyframes shimmer{to{transform:translateX(100%)}}
-.btn-auth{width:100%;padding:.7rem;border-radius:.625rem;background:linear-gradient(135deg,var(--primary),hsl(250,70%,58%));color:#fff;font-weight:600;font-size:.875rem;font-family:inherit;box-shadow:var(--shadow-p)}
-.btn-auth:hover:not(:disabled){box-shadow:0 8px 30px var(--primary-glow);transform:translateY(-1px)}
-.btn-auth:disabled{opacity:.5;cursor:not-allowed;transform:none}
-/* VIEW TABS */
-.vtabs{display:flex;background:var(--surface);border-radius:.6rem;padding:.2rem;gap:.15rem;flex-wrap:wrap}
-.vtab{padding:.4rem .75rem;border-radius:.45rem;font-size:.72rem;font-weight:500;color:var(--muted-fg);white-space:nowrap}
-.vtab.on{background:var(--card);color:var(--fg);box-shadow:var(--shadow-sm);font-weight:600}
-.vtab:hover:not(.on){color:var(--fg)}
-/* TAB REAIS/UNID */
-.tbtn{display:flex;align-items:center;gap:.5rem;padding:.625rem 1.25rem;border-radius:.75rem;font-weight:600;font-size:.875rem;border:1.5px solid var(--border);color:var(--muted-fg);background:var(--card);position:relative}
-.tbtn:hover:not(:disabled){border-color:var(--primary);color:var(--primary)}
-.tbtn.on-r{background:linear-gradient(135deg,var(--primary),hsl(250,70%,58%));color:#fff;border-color:transparent;box-shadow:var(--shadow-p)}
-.tbtn.on-u{background:linear-gradient(135deg,var(--success),hsl(160,65%,40%));color:#fff;border-color:transparent;box-shadow:var(--shadow-s)}
-.tbtn:disabled{opacity:.4;cursor:not-allowed}
-.tbtn svg{width:1rem;height:1rem;flex-shrink:0}
-/* SEG NAV */
-.seg{display:flex;background:var(--surface);border-radius:.75rem;padding:.25rem;gap:.2rem}
-.seg-b{padding:.5rem 1.1rem;border-radius:.55rem;font-size:.78rem;font-weight:600;color:var(--muted-fg);white-space:nowrap;display:flex;align-items:center;gap:.35rem}
-.seg-b.on{background:linear-gradient(135deg,var(--primary),hsl(250,70%,58%));color:#fff;box-shadow:var(--shadow-p)}
-.seg-b:hover:not(.on){color:var(--fg)}
-.seg-b svg{width:.85rem;height:.85rem}
-/* CARDS */
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;box-shadow:var(--shadow-sm);transition:box-shadow .2s,transform .2s}
-.card:hover{box-shadow:var(--shadow-md)}
-.card-h:hover{transform:translateY(-3px)}
+
+/* Auth */
+.bauth{width:100%;padding:.68rem;border-radius:.6rem;background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;font-weight:600;font-size:.875rem;font-family:inherit;box-shadow:var(--shp)}
+.bauth:hover:not(:disabled){box-shadow:0 8px 28px var(--pg);transform:translateY(-1px)}
+.bauth:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+
+/* View tabs */
+.vtabs{display:flex;background:var(--surf);border-radius:.55rem;padding:.18rem;gap:.12rem;flex-wrap:wrap}
+.vt{padding:.38rem .7rem;border-radius:.4rem;font-size:.7rem;font-weight:500;color:var(--mfg);white-space:nowrap}
+.vt.on{background:var(--card);color:var(--fg);box-shadow:var(--sh1);font-weight:600}
+.vt:hover:not(.on){color:var(--fg)}
+
+/* Tab Reais/Unidades */
+.tt{display:flex;align-items:center;gap:.5rem;padding:.6rem 1.15rem;border-radius:.7rem;font-weight:600;font-size:.85rem;border:1.5px solid var(--brd);color:var(--mfg);background:var(--card)}
+.tt:hover:not(:disabled){border-color:var(--p);color:var(--p)}
+.tt.onr{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;border-color:transparent;box-shadow:var(--shp)}
+.tt.onu{background:linear-gradient(135deg,var(--s),hsl(160,58%,38%));color:#fff;border-color:transparent;box-shadow:var(--shs)}
+.tt:disabled{opacity:.38;cursor:not-allowed}
+.tt svg{width:.95rem;height:.95rem;flex-shrink:0}
+
+/* Seg nav */
+.seg{display:flex;background:var(--surf);border-radius:.7rem;padding:.22rem;gap:.18rem}
+.sb2{padding:.48rem 1rem;border-radius:.5rem;font-size:.76rem;font-weight:600;color:var(--mfg);white-space:nowrap;display:flex;align-items:center;gap:.32rem}
+.sb2.on{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;box-shadow:var(--shp)}
+.sb2:hover:not(.on){color:var(--fg)}
+.sb2 svg{width:.8rem;height:.8rem}
+/* ─────────────────────── CARDS ─────────────────────── */
+.card{background:var(--card);border:1px solid var(--brd);border-radius:var(--r);padding:1.2rem;box-shadow:var(--sh1);transition:box-shadow .2s,transform .2s}
+.card:hover{box-shadow:var(--sh2)}
+.cardh:hover{transform:translateY(-3px)}
+
 /* KPI */
-.kpi{border-radius:var(--radius);padding:1.25rem;border:1px solid var(--border);background:var(--card);position:relative;overflow:hidden;box-shadow:var(--shadow-sm);transition:all .2s}
-.kpi:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.kpi{border-radius:var(--r);padding:1.2rem;border:1px solid var(--brd);background:var(--card);position:relative;overflow:hidden;box-shadow:var(--sh1);transition:all .2s}
+.kpi:hover{box-shadow:var(--sh2);transform:translateY(-2px)}
 .kpi::before{content:'';position:absolute;top:0;right:0;width:5rem;height:5rem;border-radius:50%;opacity:.07;transform:translate(30%,-30%)}
-.kpi.ks{border-color:hsla(142,71%,35%,.25);background:linear-gradient(135deg,var(--card),var(--success-light))}.kpi.ks::before{background:var(--success)}
-.kpi.kw{border-color:hsla(38,92%,45%,.25);background:linear-gradient(135deg,var(--card),var(--warning-light))}.kpi.kw::before{background:var(--warning)}
-.kpi.kd{border-color:hsla(4,86%,48%,.25);background:linear-gradient(135deg,var(--card),var(--danger-light))}.kpi.kd::before{background:var(--danger)}
-.kl{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted-fg)}
-.kv{font-size:1.75rem;font-weight:800;margin:.4rem 0 0;line-height:1;letter-spacing:-.02em}
-.ks2{font-size:.67rem;color:var(--muted-fg);margin-top:.35rem}
-.kbar{height:.25rem;background:var(--muted);border-radius:2px;margin-top:.75rem;overflow:hidden}
-.kbar-f{height:100%;border-radius:2px;transition:width .6s cubic-bezier(.4,0,.2,1)}
-/* REP CARD */
-.rep-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;box-shadow:var(--shadow-sm);transition:all .25s;position:relative;overflow:hidden}
-.rep-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px}
-.rep-card.bl::before{background:linear-gradient(180deg,var(--success),hsl(160,65%,50%))}
-.rep-card.at::before{background:linear-gradient(180deg,var(--danger),hsl(4,86%,60%))}
-.rep-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-3px)}
-.rnk{width:1.75rem;height:1.75rem;border-radius:.5rem;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;flex-shrink:0}
-.rnk.gold{background:linear-gradient(135deg,hsl(42,95%,55%),hsl(35,95%,45%));color:#fff;box-shadow:0 3px 12px hsla(42,95%,50%,.5)}
-.rnk.silver{background:linear-gradient(135deg,hsl(220,20%,70%),hsl(220,15%,55%));color:#fff}
-.rnk.bronze{background:linear-gradient(135deg,hsl(25,65%,55%),hsl(25,65%,42%));color:#fff}
-.rnk.other{background:var(--surface);color:var(--muted-fg)}
-.cob-tr{height:.45rem;background:var(--muted);border-radius:4px;overflow:hidden;margin:.5rem 0}
-.cob-f{height:100%;border-radius:4px;transition:width .7s cubic-bezier(.4,0,.2,1)}
-.ms{background:var(--surface);border-radius:.5rem;padding:.5rem .65rem}
-.ms-l{font-size:.6rem;color:var(--muted-fg)}.ms-v{font-size:.8rem;font-weight:700;margin-top:.1rem}
-/* TABLES */
-.tw{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm)}
-table{width:100%;border-collapse:collapse;font-size:.72rem}
-thead tr{background:var(--surface);border-bottom:1px solid var(--border)}
-th{padding:.75rem 1rem;color:var(--muted-fg);font-weight:600;font-size:.65rem;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
-th.r,td.r{text-align:right}th.c,td.c{text-align:center}
-td{padding:.75rem 1rem;border-bottom:1px solid color-mix(in srgb,var(--border) 50%,transparent);transition:background .12s}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:color-mix(in srgb,var(--primary) 4%,transparent)}
-/* UPLOAD */
-.uz{position:relative;cursor:pointer;border:2px dashed var(--border);border-radius:var(--radius);padding:2.5rem 1.5rem;text-align:center;transition:all .25s;background:var(--card)}
-.uz:hover{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 4%,var(--card));box-shadow:0 0 0 4px var(--primary-glow)}
-.uz.done{border-color:var(--success);border-style:solid;background:var(--success-light);box-shadow:0 0 0 3px var(--success-glow)}
-.sbadge{position:absolute;top:-.75rem;left:1rem;padding:.12rem .75rem;border-radius:999px;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
-.sbadge.pend{background:linear-gradient(135deg,var(--primary),hsl(250,70%,58%));color:#fff}
-.sbadge.done{background:linear-gradient(135deg,var(--success),hsl(160,65%,42%));color:#fff}
-.u-ico{width:3.5rem;height:3.5rem;border-radius:1rem;background:var(--muted);display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;transition:all .2s}
-.uz:hover .u-ico{background:color-mix(in srgb,var(--primary) 15%,var(--muted))}
-/* AUTH */
-.auth-p{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;background:radial-gradient(ellipse at 60% 40%,color-mix(in srgb,var(--primary) 8%,transparent),transparent 70%)}
-.auth-b{width:100%;max-width:380px;background:var(--card);border:1px solid var(--border);border-radius:1.25rem;padding:2rem;box-shadow:var(--shadow-lg)}
-.auth-logo{width:3.5rem;height:3.5rem;border-radius:1rem;background:linear-gradient(135deg,var(--primary),hsl(250,70%,58%));display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;box-shadow:var(--shadow-p)}
-.auth-logo svg{width:1.6rem;height:1.6rem;color:#fff}
-.if{position:relative}.if svg{position:absolute;left:.75rem;top:50%;transform:translateY(-50%);width:1rem;height:1rem;color:var(--muted-fg);pointer-events:none}
-.if input{width:100%;padding:.65rem 1rem .65rem 2.4rem;border-radius:.625rem;border:1.5px solid var(--border);background:var(--bg);color:var(--fg);font-size:.875rem;transition:border-color .15s,box-shadow .15s}
-.if input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
-.al{text-align:center;font-size:.72rem;color:var(--muted-fg)}
-.al button{font-size:.72rem;color:var(--primary);font-weight:600;text-decoration:underline;text-decoration-color:transparent}
-.al button:hover{text-decoration-color:currentColor}
-/* CHART */
-.cc{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow-sm)}
-.ct{font-size:1rem;font-weight:700;margin-bottom:.25rem;letter-spacing:-.01em}
-.cs{font-size:.72rem;color:var(--muted-fg);margin-bottom:1.25rem;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem}
-.dot{display:inline-block;width:.55rem;height:.55rem;border-radius:50%}
-/* PRIORITY */
-.pr{display:flex;align-items:center;justify-content:space-between;padding:.625rem 0;border-bottom:1px solid color-mix(in srgb,var(--border) 50%,transparent)}
-.pr:last-child{border-bottom:none}
-/* TOAST */
-#tw{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem;pointer-events:none}
-.toast{pointer-events:all;background:var(--card);border:1.5px solid var(--border);border-radius:.75rem;padding:.75rem 1rem;font-size:.8rem;font-weight:500;min-width:240px;max-width:340px;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:.5rem;animation:tIn .25s ease}
-.toast.success{border-color:var(--success);color:var(--success)}
-.toast.error{border-color:var(--danger);color:var(--danger)}
-@keyframes tIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
-@keyframes tOut{to{opacity:0;transform:translateX(20px)}}
-@keyframes spin{to{transform:rotate(360deg)}}
-.sp{width:1rem;height:1rem;border:2px solid transparent;border-top-color:currentColor;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+.kpi.ks{border-color:hsla(142,64%,34%,.22);background:linear-gradient(135deg,var(--card),var(--sl))}.kpi.ks::before{background:var(--s)}
+.kpi.kw{border-color:hsla(38,90%,44%,.22);background:linear-gradient(135deg,var(--card),var(--wl))}.kpi.kw::before{background:var(--w)}
+.kpi.kd{border-color:hsla(4,82%,47%,.22);background:linear-gradient(135deg,var(--card),var(--dl))}.kpi.kd::before{background:var(--d)}
+.kl{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--mfg)}
+.kv{font-size:1.7rem;font-weight:800;margin:.38rem 0 0;line-height:1;letter-spacing:-.02em}
+.ks2{font-size:.65rem;color:var(--mfg);margin-top:.3rem}
+.kbar{height:.22rem;background:var(--muted);border-radius:2px;margin-top:.7rem;overflow:hidden}
+.kbf{height:100%;border-radius:2px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 .pulse{animation:pulse 2s ease-in-out infinite}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-.fu{animation:fadeUp .35s ease}
-.div{width:1px;height:1.5rem;background:var(--border)}
-.ts{color:var(--success)}.td{color:var(--danger)}.tw2{color:var(--warning)}.tm{color:var(--muted-fg)}
+
+/* ─────────────────────── UPLOAD GRID ─────────────────────── */
+.upload-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.25rem}
+@media(max-width:700px){.upload-grid{grid-template-columns:1fr}}
+.upload-group{background:var(--card);border:1px solid var(--brd);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh1)}
+.upload-group-hd{padding:.75rem 1.1rem;background:var(--surf);border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:.5rem}
+.upload-group-hd svg{width:.95rem;height:.95rem}
+.upload-group-hd h3{font-size:.78rem;font-weight:700;letter-spacing:.01em}
+.upload-group-body{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:none}
+.uz{position:relative;cursor:pointer;padding:1.25rem 1rem;text-align:center;transition:all .22s;background:var(--card);border-right:1px solid var(--brd)}
+.uz:last-child{border-right:none}
+.uz:hover{background:color-mix(in srgb,var(--p) 4%,var(--card))}
+.uz.done{background:var(--sl)}
+.uz input[type=file]{display:none}
+.uz-lbl{font-size:.7rem;font-weight:600;color:var(--mfg);margin-top:.5rem;display:flex;align-items:center;justify-content:center;gap:.3rem}
+.uz-lbl.val{color:var(--p)}.uz-lbl.uni{color:var(--s)}
+.uz-ico{width:2.4rem;height:2.4rem;border-radius:.6rem;display:flex;align-items:center;justify-content:center;margin:0 auto;transition:all .2s}
+.uz-ico.val{background:hsla(224,71%,50%,.1);color:var(--p)}
+.uz-ico.uni{background:var(--sl);color:var(--s)}
+.uz-ico svg{width:1.1rem;height:1.1rem}
+.uz.done .uz-ico{background:var(--sl);color:var(--s)}
+.uz-fname{font-size:.6rem;font-family:'Geist Mono',monospace;color:var(--s);margin-top:.28rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100px}
+.uz-hint{font-size:.6rem;color:var(--mfg);opacity:.6;margin-top:.3rem}
+/* progress dots */
+.prog-dots{display:flex;gap:.3rem;justify-content:center;padding:.5rem 1.1rem;border-top:1px solid var(--brd)}
+.pdot{width:.45rem;height:.45rem;border-radius:50%;background:var(--muted);transition:background .2s}
+.pdot.on{background:var(--s)}
+
+/* ─────────────────────── REP CARD ─────────────────────── */
+.rc{background:var(--card);border:1px solid var(--brd);border-radius:var(--r);padding:1.2rem;box-shadow:var(--sh1);transition:all .22s;position:relative;overflow:hidden}
+.rc::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
+.rc.rbl::before{background:linear-gradient(180deg,var(--s),hsl(160,58%,48%))}
+.rc.rat::before{background:linear-gradient(180deg,var(--d),hsl(4,82%,58%))}
+.rc:hover{box-shadow:var(--sh3);transform:translateY(-3px)}
+.rnk{width:1.6rem;height:1.6rem;border-radius:.45rem;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:800;flex-shrink:0}
+.rnk.gold{background:linear-gradient(135deg,hsl(42,95%,55%),hsl(35,95%,45%));color:#fff;box-shadow:0 3px 10px hsla(42,95%,50%,.48)}
+.rnk.silver{background:linear-gradient(135deg,hsl(220,18%,68%),hsl(220,14%,54%));color:#fff}
+.rnk.bronze{background:linear-gradient(135deg,hsl(25,62%,53%),hsl(25,62%,42%));color:#fff}
+.rnk.other{background:var(--surf);color:var(--mfg)}
+.ctr{height:.4rem;background:var(--muted);border-radius:4px;overflow:hidden;margin:.45rem 0}
+.ctf{height:100%;border-radius:4px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.ms{background:var(--surf);border-radius:.45rem;padding:.45rem .6rem}
+.msl{font-size:.58rem;color:var(--mfg)}.msv{font-size:.75rem;font-weight:700;margin-top:.08rem}
+
+/* ─────────────────────── TABLES ─────────────────────── */
+.tw{background:var(--card);border:1px solid var(--brd);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh1)}
+table{width:100%;border-collapse:collapse;font-size:.7rem}
+thead tr{background:var(--surf);border-bottom:1px solid var(--brd)}
+th{padding:.7rem .95rem;color:var(--mfg);font-weight:600;font-size:.62rem;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+th.r,td.r{text-align:right}th.c,td.c{text-align:center}
+td{padding:.7rem .95rem;border-bottom:1px solid color-mix(in srgb,var(--brd) 50%,transparent);transition:background .1s}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:color-mix(in srgb,var(--p) 4%,transparent)}
+
+/* ─────────────────────── AUTH ─────────────────────── */
+.authp{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;background:radial-gradient(ellipse at 60% 40%,color-mix(in srgb,var(--p) 8%,transparent),transparent 70%)}
+.authb{width:100%;max-width:374px;background:var(--card);border:1px solid var(--brd);border-radius:1.2rem;padding:1.9rem;box-shadow:var(--sh3)}
+.alogo{width:3.2rem;height:3.2rem;border-radius:.9rem;background:linear-gradient(135deg,var(--p),var(--p2));display:flex;align-items:center;justify-content:center;margin:0 auto 1.1rem;box-shadow:var(--shp)}
+.alogo svg{width:1.5rem;height:1.5rem;color:#fff}
+.ifw{position:relative}.ifw svg{position:absolute;left:.7rem;top:50%;transform:translateY(-50%);width:.95rem;height:.95rem;color:var(--mfg);pointer-events:none}
+.ifw input{width:100%;padding:.62rem .95rem .62rem 2.3rem;border-radius:.6rem;border:1.5px solid var(--brd);background:var(--bg);color:var(--fg);font-size:.85rem;transition:border-color .14s,box-shadow .14s}
+.ifw input:focus{outline:none;border-color:var(--p);box-shadow:0 0 0 3px var(--pg)}
+.alinks{text-align:center;font-size:.7rem;color:var(--mfg)}
+.alinks button{font-size:.7rem;color:var(--p);font-weight:600;text-decoration:underline;text-decoration-color:transparent}
+.alinks button:hover{text-decoration-color:currentColor}
+
+/* ─────────────────────── CHART ─────────────────────── */
+.cc{background:var(--card);border:1px solid var(--brd);border-radius:var(--r);padding:1.4rem;box-shadow:var(--sh1)}
+.ct{font-size:.95rem;font-weight:700;margin-bottom:.2rem;letter-spacing:-.01em}
+.cs{font-size:.7rem;color:var(--mfg);margin-bottom:1.1rem;display:flex;flex-wrap:wrap;align-items:center;gap:.45rem}
+.dot{display:inline-block;width:.52rem;height:.52rem;border-radius:50%}
+
+/* ─────────────────────── PRIORITY ─────────────────────── */
+.pr{display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid color-mix(in srgb,var(--brd) 50%,transparent)}
+.pr:last-child{border-bottom:none}
+
+/* ─────────────────────── TOAST ─────────────────────── */
+#tw{position:fixed;bottom:1.4rem;right:1.4rem;z-index:9999;display:flex;flex-direction:column;gap:.45rem;pointer-events:none}
+.toast{pointer-events:all;background:var(--card);border:1.5px solid var(--brd);border-radius:.7rem;padding:.7rem .95rem;font-size:.78rem;font-weight:500;min-width:230px;max-width:330px;box-shadow:var(--sh3);display:flex;align-items:center;gap:.45rem;animation:tIn .22s ease}
+.toast.success{border-color:var(--s);color:var(--s)}
+.toast.error{border-color:var(--d);color:var(--d)}
+@keyframes tIn{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:translateX(0)}}
+@keyframes tOut{to{opacity:0;transform:translateX(18px)}}
+
+/* ─────────────────────── MISC ─────────────────────── */
+@keyframes spin{to{transform:rotate(360deg)}}
+.sp{width:.95rem;height:.95rem;border:2px solid transparent;border-top-color:currentColor;border-radius:50%;animation:spin .75s linear infinite;flex-shrink:0}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.fu{animation:fadeUp .32s ease}
+.divv{width:1px;height:1.4rem;background:var(--brd)}
+.ts{color:var(--s)}.td{color:var(--d)}.tw2{color:var(--w)}.tm{color:var(--mfg)}
 .fw8{font-weight:800}.fw7{font-weight:700}.fw6{font-weight:600}
-.hero{text-align:center;margin-bottom:2.5rem}
-.h-ico{width:5rem;height:5rem;border-radius:1.5rem;background:linear-gradient(135deg,var(--primary),hsl(250,70%,58%),hsl(280,65%,62%));display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;box-shadow:var(--shadow-p),0 0 60px var(--primary-glow)}
-.h-ico svg{width:2.4rem;height:2.4rem;color:#fff}
-.hero h2{font-size:2rem;font-weight:800;letter-spacing:-.025em}
-.hero p{font-size:.875rem;color:var(--muted-fg);margin-top:.5rem;max-width:440px;margin-left:auto;margin-right:auto}
-.ldf{min-height:100vh;display:flex;align-items:center;justify-content:center;gap:.75rem;font-size:.875rem;color:var(--muted-fg)}
-.dh{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-.dh summary{padding:.75rem 1.25rem;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted-fg);cursor:pointer;list-style:none;display:flex;align-items:center;gap:.5rem}
-.dh summary:hover{color:var(--fg)}
-.dh .db{padding:.75rem 1.25rem 1rem;font-size:.67rem;color:var(--muted-fg);font-family:'Geist Mono',monospace;line-height:1.8}
-.eb{font-size:.75rem;color:var(--danger);background:var(--danger-light);border:1px solid hsla(4,86%,48%,.2);border-radius:.6rem;padding:.6rem 1rem;text-align:center}
-hr{border:none;border-top:1px solid var(--border)}
-::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.hero{text-align:center;margin-bottom:2.25rem}
+.hico{width:4.5rem;height:4.5rem;border-radius:1.3rem;background:linear-gradient(135deg,var(--p),var(--p2),var(--p3));display:flex;align-items:center;justify-content:center;margin:0 auto 1.1rem;box-shadow:var(--shp),0 0 50px var(--pg)}
+.hico svg{width:2.1rem;height:2.1rem;color:#fff}
+.hero h2{font-size:1.85rem;font-weight:800;letter-spacing:-.025em}
+.hero p{font-size:.85rem;color:var(--mfg);margin-top:.45rem;max-width:430px;margin-left:auto;margin-right:auto}
+.ldf{min-height:100vh;display:flex;align-items:center;justify-content:center;gap:.7rem;font-size:.875rem;color:var(--mfg)}
+.dh{border:1px solid var(--brd);border-radius:var(--r);overflow:hidden}
+.dh summary{padding:.7rem 1.1rem;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--mfg);cursor:pointer;list-style:none;display:flex;align-items:center;gap:.45rem}
+.dh .db{padding:.7rem 1.1rem .95rem;font-size:.65rem;color:var(--mfg);font-family:'Geist Mono',monospace;line-height:1.8}
+.eb{font-size:.73rem;color:var(--d);background:var(--dl);border:1px solid hsla(4,82%,47%,.18);border-radius:.6rem;padding:.58rem .95rem;text-align:center}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-thumb{background:var(--brd);border-radius:3px}
 @media(max-width:1024px){.dsk{display:none!important}}
 @media(min-width:1025px){.mob{display:none!important}}
+/* badge status */
+.stbadge{padding:.14rem .48rem;border-radius:999px;font-size:.58rem;font-weight:700;white-space:nowrap}
 </style>
 </head>
 <body>
 <div id="app"><div class="ldf"><div class="sp"></div> Carregando...</div></div>
 <div id="tw"></div>
 <script>
+/* ══════════════════════════
+   SUPABASE
+══════════════════════════ */
 const SU="https://qcayjabwpgowgssmrxnj.supabase.co";
 const SK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjYXlqYWJ3cGdvd2dzc21yeG5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4MDM2NTgsImV4cCI6MjA4OTM3OTY1OH0.eKTa0310vZSSKb9u558o8Csx93mRbxuscBo5ooWBIrI";
 const sb=supabase.createClient(SU,SK,{auth:{storage:localStorage,persistSession:true,autoRefreshToken:true}});
-let theme=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+
+/* ══════════════════════════
+   THEME
+══════════════════════════ */
+let theme=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
 function applyTheme(t){theme=t;document.documentElement.classList.toggle('dark',t==='dark');localStorage.setItem('theme',t)}
 applyTheme(theme);
+
+/* ══════════════════════════
+   TOAST
+══════════════════════════ */
 function toast(msg,type='info',ms=3400){
   const w=document.getElementById('tw'),el=document.createElement('div');
-  el.className=`toast ${type}`;el.innerHTML=`<span>${{success:'✅',error:'❌',info:'ℹ️'}[type]||''}</span><span>${msg}</span>`;
-  w.appendChild(el);setTimeout(()=>{el.style.animation='tOut .25s ease forwards';setTimeout(()=>el.remove(),250)},ms);
+  el.className=`toast ${type}`;
+  el.innerHTML=`<span>${{success:'✅',error:'❌',info:'ℹ️'}[type]||''}</span><span>${msg}</span>`;
+  w.appendChild(el);
+  setTimeout(()=>{el.style.animation='tOut .22s ease forwards';setTimeout(()=>el.remove(),230)},ms);
 }
+
+/* ══════════════════════════
+   ROUTER
+══════════════════════════ */
 function getPage(){const h=window.location.hash,s=window.location.search;if(h.includes('type=recovery')||s.includes('type=recovery'))return'reset';if(h==='#/login')return'login';return'index'}
 function goto(p){window.location.hash=p==='login'?'#/login':p==='reset'?'#/reset':'';render()}
 window.addEventListener('hashchange',render);
+
+/* ══════════════════════════
+   AUTH STATE
+══════════════════════════ */
 let me=null,boot=true;
 sb.auth.onAuthStateChange((_,s)=>{me=s?.user??null;if(boot){boot=false;render()}else render()});
 sb.auth.getSession().then(({data:{session:s}})=>{me=s?.user??null;boot=false;render();if(me)tryLoad()});
-const Ico={
+
+/* ══════════════════════════
+   ICONS
+══════════════════════════ */
+const Ic={
   bars:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
   sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>',
   moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
@@ -241,9 +313,8 @@ const Ico={
   mail:'<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>',
   lock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
   usr:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
-  up:'<polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>',
+  upar:'<polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>',
   chk:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
-  file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
   dol:'<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
   pkg:'<line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
   arr:'<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
@@ -251,14 +322,22 @@ const Ico={
   shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>',
   users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
   medal:'<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>',
-  trend:'<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+  fam:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+  grid:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
 };
-function ic(n,sz=16,cls=''){return`<svg xmlns="http://www.w3.org/2000/svg" width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${cls}" style="flex-shrink:0">${Ico[n]||''}</svg>`}
-// Formatters
+function ic(n,sz=15,cls=''){return`<svg xmlns="http://www.w3.org/2000/svg" width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${cls}" style="flex-shrink:0">${Ic[n]||''}</svg>`}
+
+/* ══════════════════════════
+   FORMATTERS
+══════════════════════════ */
 const fc=v=>{const a=Math.abs(v);if(a>=1e6)return`R$ ${(v/1e6).toFixed(1)}M`;if(a>=1000)return`R$ ${(v/1000).toFixed(1)}k`;return`R$ ${v.toFixed(0)}`};
 const fn=v=>new Intl.NumberFormat('pt-BR').format(Math.round(v));
 const fp=v=>`${(v*100).toFixed(1)}%`;
-// Excel helpers
+const fmtV=(v,isR)=>isR?fc(v):fn(v);
+
+/* ══════════════════════════
+   EXCEL HELPERS
+══════════════════════════ */
 function nrm(n){return String(n).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[_\s.]+/g,' ').trim()}
 function fCol(row,names){
   const ks=Object.keys(row),ns=names.map(nrm);
@@ -274,32 +353,43 @@ function toN(v){
   if(lc>ld)s=s.replace(/\./g,'').replace(',','.');else s=s.replace(/,/g,'');
   const p=parseFloat(s);return isNaN(p)?0:p;
 }
-function exRow(row,fam,prod){
-  return{familia:fam,produto:prod,
-    realAA:toN(fCol(row,['REAL. AA','REAL AA'])),cota:toN(fCol(row,['COTA','cota'])),
-    realizado:toN(fCol(row,['REALIZADO','realizado'])),cobReal:toN(fCol(row,['COB. REAL','COB REAL'])),
-    crescAtual:toN(fCol(row,['CRESC. ATUAL'])),projArred:toN(fCol(row,['PROJ. ARRED','PROJ ARRED'])),
-    cobProjArred:toN(fCol(row,['COB. PROJ. ARRED','COB PROJ ARRED'])),crescProj:toN(fCol(row,['CRESC. PROJ.','CRESC PROJ'])),
-    repres:toN(fCol(row,['%Repres.','Repres'])),
+function exBase(row){
+  return{
+    realAA:toN(fCol(row,['REAL. AA','REAL AA'])),
+    cota:toN(fCol(row,['COTA','cota'])),
+    realizado:toN(fCol(row,['REALIZADO','realizado'])),
+    cobReal:toN(fCol(row,['COB. REAL','COB REAL'])),
+    crescAtual:toN(fCol(row,['CRESC. ATUAL'])),
+    projArred:toN(fCol(row,['PROJ. ARRED','PROJ ARRED'])),
+    cobProjArred:toN(fCol(row,['COB. PROJ. ARRED','COB PROJ ARRED'])),
+    crescProj:toN(fCol(row,['CRESC. PROJ.'])),
+    repres:toN(fCol(row,['%Repres.'])),
     deltaCota:toN(fCol(row,['Δ Cota Vs Dem. Proj','Δ  Cota Vs Dem. Proj','Delta Cota','DELTA'])),
     difRealizadoCota:toN(fCol(row,['Diferença Realizado x Cota'])),
   };
 }
-function parseProdSheet(wb){
+
+/* ── Parse Família sheet ── */
+function parseFamSheet(wb){
   const sheet=wb.Sheets[wb.SheetNames[0]];
   const raw=XLSX.utils.sheet_to_json(sheet,{defval:0});
-  const rows=[];let cur='';
+  const rows=[];let curFam='';
   for(const row of raw){
     const fv=String(Object.values(row)[0]??'');
-    if(fv.toLowerCase().includes('filtros aplicados')||fv.toLowerCase().includes('meses é'))continue;
+    if(fv.toLowerCase().includes('filtros')||fv.toLowerCase().includes('meses é'))continue;
     const fam=String(fCol(row,['FAMILIA','familia'])??'').trim();
     const prod=String(fCol(row,['NM_FAMILIA_PP','nm familia pp','produto'])??'').trim();
-    if(fam)cur=fam;
-    if(!prod||prod==='Total'){if(prod==='Total')rows.push(exRow(row,cur,'__TOTAL__'));continue}
-    const ext=exRow(row,cur,prod);if(ext.cota===0)continue;rows.push(ext);
+    if(fam&&!fam.toLowerCase().includes('total'))curFam=fam;
+    if(!prod)continue;
+    const ext={...exBase(row),familia:curFam,produto:prod};
+    if(prod.toLowerCase()==='total'){ext.produto='__TOTAL__';}
+    else if(ext.cota===0)continue;
+    rows.push(ext);
   }
   return rows;
 }
+
+/* ── Parse Representante sheet ── */
 function parseRepSheet(wb){
   const sheet=wb.Sheets[wb.SheetNames[0]];
   const raw=XLSX.utils.sheet_to_json(sheet,{defval:0});
@@ -309,59 +399,60 @@ function parseRepSheet(wb){
     if(!terr||terr.toLowerCase()==='total'||terr.toLowerCase().includes('filtros'))continue;
     const cota=toN(fCol(row,['COTA','cota']));if(cota===0)continue;
     let code='',name=terr;const m=terr.match(/^(\d+)\s*-\s*(.+)$/);if(m){code=m[1];name=m[2].trim()}
-    reps.push({codigo:code,nome:name,territorio:terr,
-      realAA:toN(fCol(row,['REAL. AA','REAL AA'])),cota,realizado:toN(fCol(row,['REALIZADO','realizado'])),
-      cobReal:toN(fCol(row,['COB. REAL','COB REAL'])),crescAtual:toN(fCol(row,['CRESC. ATUAL'])),
-      projArred:toN(fCol(row,['PROJ. ARRED','PROJ ARRED'])),cobProjArred:toN(fCol(row,['COB. PROJ. ARRED','COB PROJ ARRED'])),
-      crescProj:toN(fCol(row,['CRESC. PROJ.'])),repres:toN(fCol(row,['%Repres.'])),
-      deltaCota:toN(fCol(row,['Δ Cota Vs Dem. Proj','Δ  Cota Vs Dem. Proj','DELTA'])),
-      difRealizadoCota:toN(fCol(row,['Diferença Realizado x Cota'])),
-    });
+    reps.push({...exBase(row),codigo:code,nome:name,territorio:terr});
   }
   reps.sort((a,b)=>b.cobProjArred-a.cobProjArred);
   return reps;
 }
-function processFiles(vBuf,uBuf){
-  const vWb=XLSX.read(vBuf,{type:'array'}),uWb=XLSX.read(uBuf,{type:'array'});
-  const vSheet=vWb.Sheets[vWb.SheetNames[0]];
-  const fr=XLSX.utils.sheet_to_json(vSheet,{defval:0})[0]||{};
-  const isRep=Object.keys(fr).some(k=>nrm(k).includes('territorio'));
-  if(isRep){
-    const vR=parseRepSheet(vWb),uR=parseRepSheet(uWb);
-    const reps=vR.map(vr=>{
-      const ur=uR.find(r=>r.codigo===vr.codigo)||vr;
-      return{...vr,uni:{realAA:ur.realAA,cota:ur.cota,realizado:ur.realizado,cobReal:ur.cobReal,projArred:ur.projArred,cobProjArred:ur.cobProjArred,deltaCota:ur.deltaCota}};
-    });
-    const tV={cota:0,realizado:0,projArred:0,deltaCota:0,cobProjArred:0};
-    const tU={cota:0,realizado:0,projArred:0,deltaCota:0,cobProjArred:0};
-    vR.forEach(r=>{tV.cota+=r.cota;tV.realizado+=r.realizado;tV.projArred+=r.projArred;tV.deltaCota+=r.deltaCota});
-    uR.forEach(r=>{tU.cota+=r.cota;tU.realizado+=r.realizado;tU.projArred+=r.projArred;tU.deltaCota+=r.deltaCota});
-    tV.cobProjArred=tV.cota>0?tV.projArred/tV.cota:0;tU.cobProjArred=tU.cota>0?tU.projArred/tU.cota:0;
-    return{type:'rep',reps,totalValor:tV,totalUnidades:tU};
+
+/* ── Merge & build dashboard data ── */
+function buildDashData(famV,famU,repV,repU){
+  // ── FAMÍLIA ──
+  let famData=null;
+  if(famV){
+    const vRows=parseFamSheet(famV),uRows=famU?parseFamSheet(famU):null;
+    const vP=vRows.filter(r=>r.produto!=='__TOTAL__'),uP=uRows?uRows.filter(r=>r.produto!=='__TOTAL__'):[];
+    const fams=new Set(vRows.filter(r=>r.produto==='__TOTAL__').map(r=>r.familia));
+    const summaries=[];
+    for(const fam of fams){
+      const vt=vRows.find(r=>r.familia===fam&&r.produto==='__TOTAL__');
+      const ut=uRows?uRows.find(r=>r.familia===fam&&r.produto==='__TOTAL__'):null;
+      if(!vt)continue;
+      const fvp=vRows.filter(r=>r.familia===fam&&r.produto!=='__TOTAL__');
+      const fup=uRows?uRows.filter(r=>r.familia===fam&&r.produto!=='__TOTAL__'):[];
+      const prods=fvp.map(vp=>{
+        const up=fup.find(u=>u.produto===vp.produto)||null;
+        return{nome:vp.produto.replace(/_$/,'').replace(/ HYQ$/,'').trim(),valor:vp,unidades:up,status:vp.deltaCota>=0?'blindar':'atuar'};
+      });
+      summaries.push({familia:fam,valor:vt,unidades:ut,produtos:prods,status:vt.deltaCota>=0?'blindar':'atuar'});
+    }
+    summaries.sort((a,b)=>{if(a.status==='atuar'&&b.status==='blindar')return-1;if(a.status==='blindar'&&b.status==='atuar')return 1;return a.valor.deltaCota-b.valor.deltaCota});
+    const tV=sumArr(summaries.map(s=>s.valor));
+    const tU=uRows?sumArr(summaries.filter(s=>s.unidades).map(s=>s.unidades)):null;
+    famData={familias:summaries,valorRows:vP,unidadesRows:uP,totalValor:tV,totalUnidades:tU,hasUnidades:!!uRows};
   }
-  const vRows=parseProdSheet(vWb),uRows=parseProdSheet(uWb);
-  const vP=vRows.filter(r=>r.produto!=='__TOTAL__'),uP=uRows.filter(r=>r.produto!=='__TOTAL__');
-  const fams=new Set(vRows.filter(r=>r.produto==='__TOTAL__').map(r=>r.familia));
-  const sums=[];
-  for(const fam of fams){
-    const vt=vRows.find(r=>r.familia===fam&&r.produto==='__TOTAL__');
-    const ut=uRows.find(r=>r.familia===fam&&r.produto==='__TOTAL__');
-    if(!vt||!ut)continue;
-    const fvp=vRows.filter(r=>r.familia===fam&&r.produto!=='__TOTAL__');
-    const fup=uRows.filter(r=>r.familia===fam&&r.produto!=='__TOTAL__');
-    const prods=fvp.map(vp=>{
-      const up=fup.find(u=>u.produto===vp.produto)||{...vp,cota:0,realizado:0,cobReal:0,projArred:0,cobProjArred:0,deltaCota:0};
-      return{nome:vp.produto.replace(/_$/,'').replace(/ HYQ$/,'').trim(),valor:vp,unidades:up,status:vp.deltaCota>=0?'blindar':'atuar'};
-    });
-    sums.push({familia:fam,valor:{realAA:vt.realAA,cota:vt.cota,realizado:vt.realizado,cobReal:vt.cobReal,projArred:vt.projArred,cobProjArred:vt.cobProjArred,deltaCota:vt.deltaCota,difRealizadoCota:vt.difRealizadoCota},unidades:{realAA:ut.realAA,cota:ut.cota,realizado:ut.realizado,cobReal:ut.cobReal,projArred:ut.projArred,cobProjArred:ut.cobProjArred,deltaCota:ut.deltaCota,difRealizadoCota:ut.difRealizadoCota},produtos:prods,status:vt.deltaCota>=0?'blindar':'atuar'});
+  // ── REPRESENTANTE ──
+  let repData=null;
+  if(repV){
+    const vR=parseRepSheet(repV),uR=repU?parseRepSheet(repU):null;
+    const reps=vR.map(vr=>{const ur=uR?uR.find(r=>r.codigo===vr.codigo):null;return{...vr,uni:ur||null};});
+    const tV=sumArr(vR);const tU=uR?sumArr(uR):null;
+    tV.cobProjArred=tV.cota>0?tV.projArred/tV.cota:0;
+    if(tU)tU.cobProjArred=tU.cota>0?tU.projArred/tU.cota:0;
+    repData={reps,totalValor:tV,totalUnidades:tU,hasUnidades:!!uR};
   }
-  sums.sort((a,b)=>{if(a.status==='atuar'&&b.status==='blindar')return-1;if(a.status==='blindar'&&b.status==='atuar')return 1;return a.valor.deltaCota-b.valor.deltaCota});
-  const tV={cota:0,realizado:0,projArred:0,deltaCota:0,cobProjArred:0};
-  const tU={cota:0,realizado:0,projArred:0,deltaCota:0,cobProjArred:0};
-  sums.forEach(s=>{tV.cota+=s.valor.cota;tV.realizado+=s.valor.realizado;tV.projArred+=s.valor.projArred;tV.deltaCota+=s.valor.deltaCota;tU.cota+=s.unidades.cota;tU.realizado+=s.unidades.realizado;tU.projArred+=s.unidades.projArred;tU.deltaCota+=s.unidades.deltaCota});
-  tV.cobProjArred=tV.cota>0?tV.projArred/tV.cota:0;tU.cobProjArred=tU.cota>0?tU.projArred/tU.cota:0;
-  return{type:'product',familias:sums,valorRows:vP,unidadesRows:uP,totalValor:tV,totalUnidades:tU};
+  return{famData,repData};
 }
+function sumArr(arr){
+  const t={cota:0,realizado:0,projArred:0,deltaCota:0,cobProjArred:0};
+  arr.forEach(r=>{if(!r)return;t.cota+=r.cota||0;t.realizado+=r.realizado||0;t.projArred+=r.projArred||0;t.deltaCota+=r.deltaCota||0;});
+  t.cobProjArred=t.cota>0?t.projArred/t.cota:0;
+  return t;
+}
+
+/* ══════════════════════════
+   STORAGE
+══════════════════════════ */
 async function saveDash(data){
   const{data:{user}}=await sb.auth.getUser();if(!user)throw new Error('Não autenticado');
   await sb.from('saved_analyses').delete().eq('user_id',user.id);
@@ -371,10 +462,21 @@ async function loadDash(){
   const{data,error}=await sb.from('saved_analyses').select('data').order('created_at',{ascending:false}).limit(1).single();
   if(error||!data)return null;return data.data;
 }
-async function tryLoad(){try{const s=await loadDash();if(s){dashData=s;toast('Análise anterior carregada','success');render()}}catch(e){}}
-// State
-let dashData=null,tab='reais',view='familia',section='produto',
-    loading=false,saving=false,vFile=null,uFile=null,err=null,authMode='login';
+async function tryLoad(){
+  try{const s=await loadDash();if(s&&(s.famData||s.repData)){dashData=s;toast('Análise anterior carregada','success');render()}}catch(e){}
+}
+
+/* ══════════════════════════
+   STATE
+══════════════════════════ */
+// 4 file slots
+let files={famV:null,famU:null,repV:null,repU:null};
+let dashData=null,tab='reais',view='familia',section='produto';
+let loading=false,saving=false,err=null,authMode='login';
+
+/* ══════════════════════════
+   RENDER
+══════════════════════════ */
 function render(){
   const app=document.getElementById('app');
   if(boot){app.innerHTML='<div class="ldf"><div class="sp"></div> Carregando...</div>';return}
@@ -384,54 +486,56 @@ function render(){
   if(!dashData){rUpload();return}
   rDash();
 }
+
+/* ══════════════════════════
+   AUTH
+══════════════════════════ */
 function rAuth(){
   const T={login:'Entre na sua conta',signup:'Crie sua conta',forgot:'Recuperar Senha'};
   const B={login:'Entrar',signup:'Criar Conta',forgot:'Enviar Email'};
   document.getElementById('app').innerHTML=`
-  <div class="auth-p fu">
-    <div class="auth-b">
-      <div style="text-align:center;margin-bottom:1.75rem">
-        <div class="auth-logo">${ic('tgt',26)}</div>
-        <h1 style="font-size:1.2rem;font-weight:800;letter-spacing:-.02em">Dashboard Comercial</h1>
-        <p style="font-size:.8rem;color:var(--muted-fg);margin-top:.25rem">${T[authMode]}</p>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:.75rem">
-        ${authMode==='signup'?`<div class="if">${ic('usr',16)}<input id="i-n" type="text" placeholder="Seu nome"/></div>`:''}
-        <div class="if">${ic('mail',16)}<input id="i-e" type="email" placeholder="Email" required/></div>
-        ${authMode!=='forgot'?`<div class="if">${ic('lock',16)}<input id="i-p" type="password" placeholder="Senha (mín. 6 caracteres)" minlength="6"/></div>`:''}
-        <button class="btn-auth" id="btn-a" onclick="subAuth()">${B[authMode]}</button>
-      </div>
-      <div class="al" style="margin-top:1.25rem;display:flex;flex-direction:column;gap:.4rem">
-        ${authMode==='login'?`<div><button onclick="setAM('forgot')">Esqueci minha senha</button></div><div>Sem conta? <button onclick="setAM('signup')">Criar conta</button></div>`:''}
-        ${authMode==='signup'?`<div>Já tem conta? <button onclick="setAM('login')">Fazer login</button></div>`:''}
-        ${authMode==='forgot'?`<div><button onclick="setAM('login')">Voltar ao login</button></div>`:''}
-      </div>
+  <div class="authp fu"><div class="authb">
+    <div style="text-align:center;margin-bottom:1.6rem">
+      <div class="alogo">${ic('tgt',22)}</div>
+      <h1 style="font-size:1.15rem;font-weight:800;letter-spacing:-.02em">Dashboard Comercial</h1>
+      <p style="font-size:.78rem;color:var(--mfg);margin-top:.2rem">${T[authMode]}</p>
     </div>
-  </div>`;
+    <div style="display:flex;flex-direction:column;gap:.7rem">
+      ${authMode==='signup'?`<div class="ifw">${ic('usr')}<input id="in" type="text" placeholder="Seu nome"/></div>`:''}
+      <div class="ifw">${ic('mail')}<input id="ie" type="email" placeholder="Email" required/></div>
+      ${authMode!=='forgot'?`<div class="ifw">${ic('lock')}<input id="ip" type="password" placeholder="Senha (mín. 6 caracteres)" minlength="6"/></div>`:''}
+      <button class="bauth" id="ba" onclick="subAuth()">${B[authMode]}</button>
+    </div>
+    <div class="alinks" style="margin-top:1.1rem;display:flex;flex-direction:column;gap:.38rem">
+      ${authMode==='login'?`<div><button onclick="setAM('forgot')">Esqueci minha senha</button></div><div>Sem conta? <button onclick="setAM('signup')">Criar conta</button></div>`:''}
+      ${authMode==='signup'?`<div>Já tem conta? <button onclick="setAM('login')">Fazer login</button></div>`:''}
+      ${authMode==='forgot'?`<div><button onclick="setAM('login')">Voltar ao login</button></div>`:''}
+    </div>
+  </div></div>`;
 }
 function setAM(m){authMode=m;render()}
 async function subAuth(){
-  const email=document.getElementById('i-e')?.value?.trim();
-  const pass=document.getElementById('i-p')?.value;
-  const name=document.getElementById('i-n')?.value?.trim();
-  const btn=document.getElementById('btn-a');if(!btn)return;
+  const email=document.getElementById('ie')?.value?.trim();
+  const pass=document.getElementById('ip')?.value;
+  const name=document.getElementById('in')?.value?.trim();
+  const btn=document.getElementById('ba');if(!btn)return;
   btn.disabled=true;btn.textContent='Aguarde...';
   try{
     if(authMode==='forgot'){const{error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.href.split('#')[0]+'#/reset'});if(error)throw error;toast('Email enviado!','success');setAM('login')}
-    else if(authMode==='login'){const{error}=await sb.auth.signInWithPassword({email,password:pass});if(error)throw error;toast('Login realizado!','success')}
+    else if(authMode==='login'){const{error}=await sb.auth.signInWithPassword({email,password:pass});if(error)throw error;toast('Bem-vindo!','success')}
     else{const{error}=await sb.auth.signUp({email,password:pass,options:{data:{name}}});if(error)throw error;toast('Conta criada! Verifique seu email.','success')}
   }catch(e){toast(e.message||'Erro','error');btn.disabled=false;btn.textContent=authMode==='forgot'?'Enviar Email':authMode==='login'?'Entrar':'Criar Conta'}
 }
 function rReset(){
   const isR=window.location.hash.includes('type=recovery')||window.location.search.includes('type=recovery');
-  if(!isR){document.getElementById('app').innerHTML=`<div class="auth-p"><div style="text-align:center;max-width:360px"><div class="auth-logo">${ic('tgt',26)}</div><h2 style="font-size:1.1rem;font-weight:700;margin-bottom:.5rem">Link inválido</h2><p style="font-size:.8rem;color:var(--muted-fg);margin-bottom:1.5rem">Link expirado ou inválido.</p><button class="btn-g" onclick="goto('login')">Voltar ao login</button></div></div>`;return}
+  if(!isR){document.getElementById('app').innerHTML=`<div class="authp"><div style="text-align:center;max-width:340px"><div class="alogo">${ic('tgt',22)}</div><h2 style="font-size:1rem;font-weight:700;margin-bottom:.45rem">Link inválido</h2><p style="font-size:.78rem;color:var(--mfg);margin-bottom:1.25rem">Link expirado ou inválido.</p><button class="bg2" onclick="goto('login')">Voltar ao login</button></div></div>`;return}
   document.getElementById('app').innerHTML=`
-  <div class="auth-p fu"><div class="auth-b">
-    <div style="text-align:center;margin-bottom:1.75rem"><div class="auth-logo">${ic('lock',26)}</div><h1 style="font-size:1.2rem;font-weight:800">Nova Senha</h1></div>
-    <div style="display:flex;flex-direction:column;gap:.75rem">
-      <div class="if">${ic('lock',16)}<input id="rp1" type="password" placeholder="Nova senha" minlength="6"/></div>
-      <div class="if">${ic('lock',16)}<input id="rp2" type="password" placeholder="Confirmar nova senha" minlength="6"/></div>
-      <button class="btn-auth" onclick="subReset()">Atualizar Senha</button>
+  <div class="authp fu"><div class="authb">
+    <div style="text-align:center;margin-bottom:1.5rem"><div class="alogo">${ic('lock',22)}</div><h1 style="font-size:1.1rem;font-weight:800">Nova Senha</h1></div>
+    <div style="display:flex;flex-direction:column;gap:.7rem">
+      <div class="ifw">${ic('lock')}<input id="rp1" type="password" placeholder="Nova senha" minlength="6"/></div>
+      <div class="ifw">${ic('lock')}<input id="rp2" type="password" placeholder="Confirmar nova senha" minlength="6"/></div>
+      <button class="bauth" onclick="subReset()">Atualizar Senha</button>
     </div>
   </div></div>`;
 }
@@ -441,338 +545,444 @@ async function subReset(){
   try{const{error}=await sb.auth.updateUser({password:p});if(error)throw error;toast('Senha atualizada!','success');setTimeout(()=>goto('index'),1500)}
   catch(e){toast(e.message||'Erro','error')}
 }
+
+/* ══════════════════════════
+   UPLOAD PAGE — 4 SLOTS
+══════════════════════════ */
 function rUpload(){
+  const f=files;
+  const total=[f.famV,f.famU,f.repV,f.repU].filter(Boolean).length;
+  const canProc=(f.famV||f.repV); // need at least one pair
   document.getElementById('app').innerHTML=`
-  <div>
-    ${rHeader(false)}
-    <main>
-      <div style="max-width:660px;margin:0 auto" class="fu">
-        <div class="hero">
-          <div class="h-ico">${ic('bars',34)}</div>
-          <h2>Análise 360° Pro</h2>
-          <p>Suba seus arquivos Excel para análise por produto/família ou por representante.</p>
+  <div>${rHeader(false)}
+  <main>
+  <div style="max-width:720px;margin:0 auto" class="fu">
+    <div class="hero">
+      <div class="hico">${ic('bars',28)}</div>
+      <h2>Análise 360° Pro</h2>
+      <p>Suba até 4 arquivos Excel para análise completa por <strong>Família/Produto</strong> e por <strong>Representante</strong> — em Reais e Unidades.</p>
+    </div>
+
+    <!-- Upload grid -->
+    <div class="upload-grid" style="margin-bottom:1.5rem">
+
+      <!-- FAMÍLIA -->
+      <div class="upload-group">
+        <div class="upload-group-hd" style="border-left:3px solid var(--p)">
+          ${ic('fam',14,'',)} <h3 style="color:var(--p)">Por Família / Produto</h3>
         </div>
-        <div class="grid g2 gap-5" style="margin-bottom:2rem">
-          ${uZone(1,'Excel de Valor (R$)','Dados financeiros',vFile,'v')}
-          ${uZone(2,'Excel de Unidades','Dados de unidades',uFile,'u')}
+        <div class="upload-group-body" style="display:grid;grid-template-columns:1fr 1fr">
+          ${uzSlot('famV','Reais','val',f.famV,'Arquivo com coluna FAMILIA + NM_FAMILIA_PP em R$')}
+          ${uzSlot('famU','Unidades','uni',f.famU,'Mesmo layout em unidades')}
         </div>
-        <details class="dh" style="margin-bottom:1.5rem">
-          <summary>${ic('file',13)} Formato esperado</summary>
-          <div class="db">Por produto: FAMILIA · NM_FAMILIA_PP · REAL. AA · COTA · REALIZADO ...<br/>Por rep: TERRITORIO · REAL. AA · COTA · REALIZADO · COB. REAL · PROJ. ARRED ...</div>
-        </details>
-        ${err?`<div class="eb" style="margin-bottom:1rem">${err}</div>`:''}
-        <button class="btn-proc" id="btn-pc" ${!vFile||!uFile||loading?'disabled':''} onclick="doProc()">
-          ${loading?`<div class="sp"></div>Processando...`:`Gerar Análise 360° ${ic('arr',18)}`}
-        </button>
-        ${me?`<p style="text-align:center;font-size:.67rem;color:var(--muted-fg);opacity:.5;margin-top:1.25rem">Logado como ${me.email}</p>`:''}
-      </div>
-    </main>
-  </div>`;
-}
-function uZone(step,label,desc,file,id){
-  return`<div class="uz ${file?'done':''}" onclick="document.getElementById('fi-${id}').click()" ondrop="onDrop(event,'${id}')" ondragover="event.preventDefault()">
-    <input type="file" id="fi-${id}" accept=".xlsx,.xls" style="display:none" onchange="onFile(event,'${id}')"/>
-    <span class="sbadge ${file?'done':'pend'}">Passo ${step}</span>
-    ${file?`<div style="display:flex;flex-direction:column;align-items:center;gap:.75rem"><div style="color:var(--success)">${ic('chk',44)}</div><div><div style="font-size:.875rem;font-weight:700">${label}</div><div style="font-size:.7rem;color:var(--success);margin-top:.2rem;font-family:'Geist Mono',monospace">✓ ${file.name}</div></div></div>`
-    :`<div style="display:flex;flex-direction:column;align-items:center;gap:.75rem"><div class="u-ico">${ic(id==='v'?'dol':'pkg',26)}</div><div><div style="font-size:.875rem;font-weight:700">${label}</div><div style="font-size:.72rem;color:var(--muted-fg);margin-top:.2rem">${desc}</div></div><div style="font-size:.67rem;color:hsla(215,14%,48%,.55);display:flex;align-items:center;gap:.3rem">${ic('up',11)} Clique ou arraste aqui</div></div>`}
-  </div>`;
-}
-function onDrop(e,id){e.preventDefault();const f=e.dataTransfer.files[0];if(f&&(f.name.endsWith('.xlsx')||f.name.endsWith('.xls'))){if(id==='v')vFile=f;else uFile=f;render()}}
-function onFile(e,id){const f=e.target.files?.[0];if(f){if(id==='v')vFile=f;else uFile=f;render()}}
-async function doProc(){
-  if(!vFile||!uFile)return;loading=true;err=null;render();
-  try{
-    const[vB,uB]=await Promise.all([vFile.arrayBuffer(),uFile.arrayBuffer()]);
-    dashData=processFiles(vB,uB);
-    section=dashData.type==='rep'?'rep':'produto';
-    try{await saveDash(dashData);toast('Análise salva!','success')}catch(e){toast('Processado mas erro ao salvar.','error')}
-  }catch(e){err='Erro ao processar. Verifique o formato dos arquivos.';console.error(e);toast('Erro ao processar','error')}
-  finally{loading=false;render()}
-}
-function rHeader(hasDash){
-  return`<header>
-    <div class="h-inner">
-      <div style="display:flex;align-items:center;gap:.75rem">
-        <div class="logo">${ic('bars',18)}</div>
-        <div class="brand">
-          <h1>Análise 360° <span class="badge-pro">Pro</span></h1>
-          <p>Cobertura & Delta de Cota</p>
+        <div class="prog-dots">
+          <div class="pdot ${f.famV?'on':''}"></div>
+          <div class="pdot ${f.famU?'on':''}"></div>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
-        ${hasDash?`
-          <div class="vtabs dsk">
-            ${Object.entries({familia:'📂 Família',produto:'📋 Produto',cobertura:'📊 Cobertura',delta:'📈 Delta'}).map(([k,l])=>`<button class="vtab ${view===k?'on':''}" onclick="setView('${k}')">${l}</button>`).join('')}
-          </div>
-          <div class="div dsk"></div>
-          <button class="btn-s" id="btn-sv" onclick="doSave()" style="padding:.45rem .85rem">${ic('save',13)} <span class="hide-mob">Salvar</span></button>
-          <button class="btn-g" onclick="doPDF()" style="padding:.45rem .85rem">${ic('dl',13)} <span class="hide-mob" style="font-size:.72rem">PDF</span></button>
-          <button class="btn-g" onclick="doPNG()" style="padding:.45rem .85rem">${ic('img',13)} <span class="hide-mob" style="font-size:.72rem">PNG</span></button>
-          <button class="btn-g" onclick="doNew()" style="font-size:.72rem;padding:.45rem .85rem">Novo</button>
-          <div class="div"></div>`:''}
-        <button class="btn-i" onclick="toggleTheme()">${ic(theme==='dark'?'sun':'moon',15)}</button>
-        <button class="btn-i out" onclick="doOut()">${ic('out',15)}</button>
+
+      <!-- REPRESENTANTE -->
+      <div class="upload-group">
+        <div class="upload-group-hd" style="border-left:3px solid var(--s)">
+          ${ic('users',14)} <h3 style="color:var(--s)">Por Representante</h3>
+        </div>
+        <div class="upload-group-body" style="display:grid;grid-template-columns:1fr 1fr">
+          ${uzSlot('repV','Reais','val',f.repV,'Arquivo com coluna TERRITORIO em R$')}
+          ${uzSlot('repU','Unidades','uni',f.repU,'Mesmo layout em unidades')}
+        </div>
+        <div class="prog-dots">
+          <div class="pdot ${f.repV?'on':''}"></div>
+          <div class="pdot ${f.repU?'on':''}"></div>
+        </div>
       </div>
     </div>
+
+    <!-- Status bar -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:.5rem;margin-bottom:1.25rem;font-size:.72rem;color:var(--mfg)">
+      ${['famV','famU','repV','repU'].map(k=>{
+        const lbls={famV:'Família R$',famU:'Família Un.',repV:'Rep. R$',repU:'Rep. Un.'};
+        const ok=!!f[k];
+        return`<span style="display:flex;align-items:center;gap:.28rem;padding:.2rem .55rem;border-radius:999px;background:${ok?'var(--sl)':'var(--surf)'};color:${ok?'var(--s)':'var(--mfg)'};font-weight:${ok?700:400};font-size:.62rem">${ok?'✓':'○'} ${lbls[k]}</span>`;
+      }).join('')}
+    </div>
+
+    <details class="dh" style="margin-bottom:1.25rem">
+      <summary>${ic('grid',12)} Sobre os formatos esperados</summary>
+      <div class="db">
+        <strong>Família/Produto:</strong> FAMILIA · NM_FAMILIA_PP · REAL. AA · COTA · REALIZADO · COB. REAL · PROJ. ARRED · COB. PROJ. ARRED · Δ Cota Vs Dem. Proj<br/>
+        <strong>Representante:</strong> TERRITORIO · REAL. AA · COTA · REALIZADO · COB. REAL · PROJ. ARRED · COB. PROJ. ARRED · Δ Cota Vs Dem. Proj<br/>
+        <br/>✅ Mínimo necessário: 1 arquivo (Família Reais <em>ou</em> Representante Reais)<br/>
+        📊 Para comparar Reais vs Unidades: suba os pares correspondentes
+      </div>
+    </details>
+
+    ${err?`<div class="eb" style="margin-bottom:1rem">${err}</div>`:''}
+
+    <button class="bproc" id="bpc" ${!canProc||loading?'disabled':''} onclick="doProc()">
+      ${loading?`<div class="sp"></div> Processando...`:`${ic('arr',18)} Gerar Análise 360°`}
+    </button>
+    ${me?`<p style="text-align:center;font-size:.62rem;color:var(--mfg);opacity:.45;margin-top:1.1rem">${me.email}</p>`:''}
+  </div>
+  </main></div>`;
+}
+
+function uzSlot(key,label,type,file,hint){
+  return`<div class="uz ${file?'done':''}" onclick="document.getElementById('fi-${key}').click()" ondrop="onDrop(event,'${key}')" ondragover="event.preventDefault()">
+    <input type="file" id="fi-${key}" accept=".xlsx,.xls" style="display:none" onchange="onFile(event,'${key}')"/>
+    <div class="uz-ico ${type}">${file?ic('chk',18):ic(type==='val'?'dol':'pkg',18)}</div>
+    <div class="uz-lbl ${type}">${label}</div>
+    ${file?`<div class="uz-fname">${file.name}</div>`:`<div class="uz-hint">${hint.length>28?hint.slice(0,28)+'…':hint}</div>`}
+    ${!file?`<div class="uz-hint" style="margin-top:.2rem;font-size:.55rem">${ic('upar',9)} clique ou arraste</div>`:''}
+  </div>`;
+}
+
+function onDrop(e,key){e.preventDefault();const f=e.dataTransfer.files[0];if(f&&(f.name.endsWith('.xlsx')||f.name.endsWith('.xls'))){files[key]=f;render()}}
+function onFile(e,key){const f=e.target.files?.[0];if(f){files[key]=f;render()}}
+
+async function doProc(){
+  const{famV,famU,repV,repU}=files;
+  if(!famV&&!repV)return;
+  loading=true;err=null;render();
+  try{
+    async function readBuf(f){return f?f.arrayBuffer():null}
+    const[bFV,bFU,bRV,bRU]=await Promise.all([readBuf(famV),readBuf(famU),readBuf(repV),readBuf(repU)]);
+    const wFV=bFV?XLSX.read(bFV,{type:'array'}):null;
+    const wFU=bFU?XLSX.read(bFU,{type:'array'}):null;
+    const wRV=bRV?XLSX.read(bRV,{type:'array'}):null;
+    const wRU=bRU?XLSX.read(bRU,{type:'array'}):null;
+    dashData=buildDashData(wFV,wFU,wRV,wRU);
+    // auto-select section
+    if(dashData.famData&&!dashData.repData)section='produto';
+    else if(!dashData.famData&&dashData.repData)section='rep';
+    else section='produto';
+    try{await saveDash(dashData);toast('Análise salva na nuvem!','success')}
+    catch{toast('Processado — erro ao salvar na nuvem.','error')}
+  }catch(e){err='Erro ao processar arquivos. Verifique o formato.';console.error(e);toast('Erro ao processar','error')}
+  finally{loading=false;render()}
+}
+
+/* ══════════════════════════
+   HEADER
+══════════════════════════ */
+function rHeader(hasDash){
+  return`<header>
+  <div class="hi">
+    <div style="display:flex;align-items:center;gap:.7rem">
+      <div class="logo">${ic('bars',16)}</div>
+      <div class="brand">
+        <h1>Análise 360° <span class="bpro">Pro</span></h1>
+        <p>Cobertura & Delta de Cota</p>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
+      ${hasDash?`
+        <div class="vtabs dsk">
+          ${[['familia','📂 Família'],['produto','📋 Produto'],['cobertura','📊 Cobertura'],['delta','📈 Delta']].map(([k,l])=>`<button class="vt ${view===k?'on':''}" onclick="setView('${k}')">${l}</button>`).join('')}
+        </div>
+        <div class="divv dsk"></div>
+        <button class="bs" id="bsv" onclick="doSave()" style="padding:.42rem .8rem">${ic('save',13)} <span class="hm">Salvar</span></button>
+        <button class="bg2" onclick="doPDF()" style="padding:.42rem .8rem">${ic('dl',13)} <span class="hm" style="font-size:.7rem">PDF</span></button>
+        <button class="bg2" onclick="doPNG()" style="padding:.42rem .8rem">${ic('img',13)} <span class="hm" style="font-size:.7rem">PNG</span></button>
+        <button class="bg2" onclick="doNew()" style="font-size:.7rem;padding:.42rem .8rem">Novo</button>
+        <div class="divv"></div>`:''}
+      <button class="bi" onclick="toggleTheme()">${ic(theme==='dark'?'sun':'moon',14)}</button>
+      <button class="bi x" onclick="doOut()">${ic('out',14)}</button>
+    </div>
+  </div>
   </header>`;
 }
+
+/* ══════════════════════════
+   DASHBOARD
+══════════════════════════ */
 function rDash(){
+  const hasFam=!!dashData.famData;
+  const hasRep=!!dashData.repData;
+  // If section is rep but no repData, switch to produto
+  if(section==='rep'&&!hasRep)section='produto';
+  if(section==='produto'&&!hasFam&&hasRep)section='rep';
+
   document.getElementById('app').innerHTML=`
-  <div id="dash-root">
+  <div id="dr">
     ${rHeader(true)}
-    <main class="space-y fu" id="dash-main">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem">
+    <main class="sy fu" id="dm">
+      <!-- Seg + view tabs -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.7rem">
         <div class="seg">
-          <button class="seg-b ${section==='produto'?'on':''}" onclick="setSec('produto')">${ic('pkg',14)} Por Produto/Família</button>
-          <button class="seg-b ${section==='rep'?'on':''}" onclick="setSec('rep')">${ic('users',14)} Por Representante</button>
+          ${hasFam?`<button class="sb2 ${section==='produto'?'on':''}" onclick="setSec('produto')">${ic('fam',13)} Família/Produto</button>`:''}
+          ${hasRep?`<button class="sb2 ${section==='rep'?'on':''}" onclick="setSec('rep')">${ic('users',13)} Representante</button>`:''}
         </div>
         <div class="vtabs mob">
-          ${Object.entries({familia:'📂',produto:'📋',cobertura:'📊',delta:'📈'}).map(([k,l])=>`<button class="vtab ${view===k?'on':''}" onclick="setView('${k}')">${l}</button>`).join('')}
+          ${[['familia','📂'],['produto','📋'],['cobertura','📊'],['delta','📈']].map(([k,l])=>`<button class="vt ${view===k?'on':''}" onclick="setView('${k}')">${l}</button>`).join('')}
         </div>
       </div>
-      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-        <button class="tbtn ${tab==='reais'?'on-r':''}" onclick="setTab('reais')">${ic('dol',16)} Reais</button>
-        <button class="tbtn ${tab==='unidades'?'on-u':''}" onclick="setTab('unidades')">${ic('pkg',16)} Unidades</button>
-      </div>
-      <div id="ca">${section==='rep'?rRepSec():rProdSec()}</div>
+
+      <!-- Tab Reais/Unidades -->
+      ${rTabRow()}
+
+      <!-- Content -->
+      <div id="ca">${section==='rep'?rRepSec():rFamSec()}</div>
     </main>
   </div>`;
-  setTimeout(mountCharts,150);
+  setTimeout(mountCharts,160);
 }
-// KPI helper
+
+function rTabRow(){
+  const fd=dashData.famData,rd=dashData.repData;
+  const hasU=(section==='produto'&&fd?.hasUnidades)||(section==='rep'&&rd?.hasUnidades);
+  return`<div style="display:flex;gap:.45rem;flex-wrap:wrap">
+    <button class="tt ${tab==='reais'?'onr':''}" onclick="setTab('reais')">${ic('dol',15)} Reais</button>
+    <button class="tt ${tab==='unidades'?'onu':''}" ${!hasU?'disabled title="Carregue o arquivo de unidades correspondente"':''} onclick="setTab('unidades')">${ic('pkg',15)} Unidades</button>
+  </div>`;
+}
+
+/* ══════════════════════════
+   KPI
+══════════════════════════ */
 function kpi(title,val,sub,type='',pct=0,bar=false){
   const cls={success:'ks',warning:'kw',danger:'kd','':''}[type]||'';
-  const tc={success:'var(--success)',warning:'var(--warning)',danger:'var(--danger)','':'var(--fg)'}[type]||'var(--fg)';
-  const bc={success:'var(--success)',warning:'var(--warning)',danger:'var(--danger)','':'var(--primary)'}[type]||'var(--primary)';
+  const tc={success:'var(--s)',warning:'var(--w)',danger:'var(--d)','':'var(--fg)'}[type]||'var(--fg)';
+  const bc={success:'var(--s)',warning:'var(--w)',danger:'var(--d)','':'var(--p)'}[type]||'var(--p)';
   return`<div class="kpi ${cls}">
     <div class="kl">${title}</div>
     <div class="kv mono ${type==='danger'?'pulse':''}" style="color:${tc}">${val}</div>
     ${sub?`<div class="ks2 mono">${sub}</div>`:''}
-    ${bar?`<div class="kbar"><div class="kbar-f" style="width:${Math.min(pct*100,100)}%;background:${bc}"></div></div>`:''}
+    ${bar?`<div class="kbar"><div class="kbf" style="width:${Math.min(pct*100,100)}%;background:${bc}"></div></div>`:''}
   </div>`;
 }
-// Product section
-function rProdSec(){
-  const rows=tab==='reais'?(dashData.valorRows||[]):(dashData.unidadesRows||[]);
-  const totals=tab==='reais'?dashData.totalValor:dashData.totalUnidades;
-  const fmt=v=>tab==='reais'?fc(v):fn(v);
+
+/* ══════════════════════════
+   FAMÍLIA SECTION
+══════════════════════════ */
+function rFamSec(){
+  const fd=dashData.famData;if(!fd)return'<div style="color:var(--mfg);text-align:center;padding:3rem">Nenhum dado de família carregado.</div>';
+  const isR=tab==='reais';
+  const rows=isR?fd.valorRows:fd.unidadesRows;
+  const totals=isR?fd.totalValor:fd.totalUnidades||fd.totalValor;
+  const fmt=v=>fmtV(v,isR);
   const urg=rows.filter(r=>r.cobProjArred<0.7).length;
   const bat=rows.filter(r=>r.cobProjArred>=1.0).length;
-  return`<div class="space-y">
-    <div class="grid g4 gap-3">
+  return`<div class="sy">
+    <div class="g4 gap4" style="display:grid">
       ${kpi('Cota Total',fmt(totals.cota),'Meta do período','',0)}
       ${kpi('Realizado',fmt(totals.realizado),`${totals.cota>0?((totals.realizado/totals.cota)*100).toFixed(1):'0'}% da cota`,totals.realizado>=totals.cota?'success':'warning',totals.cota>0?totals.realizado/totals.cota:0,true)}
       ${kpi('Projeção',fmt(totals.projArred),`Cob. ${fp(totals.cobProjArred)}`,totals.cobProjArred>=1?'success':'warning',Math.min(totals.cobProjArred,1.5),true)}
       ${kpi('Alertas',`${urg} urgentes`,`${bat} batendo meta`,urg>0?'danger':'success')}
     </div>
-    ${view==='familia'?rFamView(rows):view==='produto'?rProdTbl(rows):view==='cobertura'?rCobChart(rows):rDeltaChart(rows)}
-    ${rPriority(rows,'produto')}
+    ${view==='familia'?rFamCards(fd,isR,fmt):view==='produto'?rProdTbl(rows,isR):view==='cobertura'?rCobChart(rows):rDeltaChart(rows)}
+    ${rPriority(rows,'prod')}
   </div>`;
 }
-// Rep section
+
+function rFamCards(fd,isR,fmt){
+  const sC=c=>c>=1?'hsl(142,64%,36%)':c>=.7?'hsl(38,90%,44%)':'hsl(4,82%,48%)';
+  return`<div class="g3 gap4" style="display:grid">${fd.familias.map(s=>{
+    const d=isR?s.valor:s.unidades||s.valor;
+    const sc=sC(d.cobProjArred),pP=d.cobProjArred*100,pR=d.cota>0?(d.realizado/d.cota)*100:0;
+    return`<div class="card cardh">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem">
+        <span style="font-weight:700;font-size:.85rem">${s.familia}</span>
+        <span class="stbadge" style="background:${sc}1a;color:${sc}">${d.cobProjArred>=1?'✅ Meta':d.cobProjArred>=.7?'⚠️ Atenção':'🚨 Atuar'}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--mfg);margin-bottom:.22rem"><span>Cobertura Projetada</span><span class="mono fw8" style="color:${sc}">${pP.toFixed(1)}%</span></div>
+      <div style="height:.38rem;background:var(--muted);border-radius:3px;overflow:hidden;margin-bottom:.8rem"><div style="height:100%;border-radius:3px;background:${sc};width:${Math.min(pP,100)}%;transition:width .6s ease"></div></div>
+      <div class="g2 gap2" style="display:grid;font-size:.7rem">
+        <div class="ms"><div class="msl">Realizado</div><div class="msv mono">${fmt(d.realizado)}</div><div style="font-size:.6rem;color:${pR>=100?'var(--s)':'var(--w)'}">${pR.toFixed(1)}% da cota</div></div>
+        <div class="ms"><div class="msl">Δ Cota</div><div class="msv mono" style="color:${d.deltaCota>=0?'var(--s)':'var(--d)'}">${d.deltaCota>=0?'+':''}${fmt(d.deltaCota)}</div><div style="font-size:.6rem;color:var(--mfg)">vs dem. proj.</div></div>
+      </div>
+      <p style="font-size:.62rem;color:var(--mfg);margin-top:.6rem">${s.produtos.length} produto${s.produtos.length!==1?'s':''}</p>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function rProdTbl(rows,isR){
+  const sorted=[...rows].sort((a,b)=>a.cobProjArred-b.cobProjArred);
+  const fmt=v=>fmtV(v,isR);
+  const FC={'FOCO 1':'hsl(239,82%,65%)','FOCO 2':'hsl(38,90%,44%)','FOCO 3':'hsl(160,64%,36%)','DEMAIS PRODUTOS':'hsl(215,14%,55%)','LANCAMENTO':'hsl(330,78%,58%)'};
+  const sc=c=>c>=1?'var(--s)':c>=.7?'var(--w)':'var(--d)';
+  return`<div class="tw ox"><table>
+    <thead><tr><th>Família</th><th>Produto</th><th class="r">Cota</th><th class="r">Realizado</th><th class="r">Cob. Real</th><th class="r">Projeção</th><th class="r">Cob. Proj.</th><th class="r">Δ Cota</th><th class="c">Status</th></tr></thead>
+    <tbody>${sorted.map(row=>{
+      const fc2=FC[row.familia]||'hsl(215,14%,55%)';
+      return`<tr>
+        <td><span style="padding:.1rem .45rem;border-radius:999px;font-size:.58rem;font-weight:600;background:${fc2}1a;color:${fc2}">${row.familia}</span></td>
+        <td style="font-weight:600;font-size:.74rem">${row.produto.replace(/ MF_/,'').replace(/ HYQ/,'').replace(/_$/,'')}</td>
+        <td class="r mono" style="color:var(--mfg)">${fmt(row.cota)}</td>
+        <td class="r mono fw6">${fmt(row.realizado)}</td>
+        <td class="r mono">${fp(row.cobReal)}</td>
+        <td class="r mono" style="color:var(--mfg)">${fmt(row.projArred)}</td>
+        <td class="r mono fw8" style="color:${sc(row.cobProjArred)}">${fp(row.cobProjArred)}</td>
+        <td class="r"><span class="mono fw6" style="color:${row.deltaCota>=0?'var(--s)':'var(--d)'}">${row.deltaCota>=0?'+':''}${fmt(row.deltaCota)}</span></td>
+        <td class="c" style="font-size:.62rem;font-weight:700;color:${sc(row.cobProjArred)}">${row.cobProjArred>=1?'✅':row.cobProjArred>=.7?'⚠️':'🚨'}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+
+function rCobChart(rows){return`<div class="cc"><div class="ct">Cobertura Projetada por Produto</div><div class="cs"><span class="dot" style="background:hsl(142,64%,38%)"></span>≥100% <span style="margin:0 .4rem">|</span><span class="dot" style="background:hsl(38,90%,46%)"></span>70–99% <span style="margin:0 .4rem">|</span><span class="dot" style="background:hsl(4,82%,50%)"></span>&lt;70%</div><div id="ch-cob" style="height:${Math.max(300,rows.length*30)}px"></div></div>`}
+function rDeltaChart(rows){return`<div class="cc"><div class="ct">Δ Cota vs Demanda Projetada</div><div class="cs"><span class="dot" style="background:hsl(142,64%,38%)"></span>Positivo = supera <span style="margin:0 .4rem">|</span><span class="dot" style="background:hsl(4,82%,50%)"></span>Negativo = abaixo</div><div id="ch-delta" style="height:${Math.max(300,rows.length*30)}px"></div></div>`}
+
+/* ══════════════════════════
+   REP SECTION
+══════════════════════════ */
 function rRepSec(){
-  const reps=dashData.reps||[];
+  const rd=dashData.repData;if(!rd)return'<div style="color:var(--mfg);text-align:center;padding:3rem">Nenhum dado de representante carregado.</div>';
   const isR=tab==='reais';
-  const totals=isR?dashData.totalValor:dashData.totalUnidades;
-  const fmt=v=>isR?fc(v):fn(v);
-  const getCob=r=>isR?r.cobProjArred:r.uni?.cobProjArred||0;
+  const reps=rd.reps;
+  const totals=isR?rd.totalValor:rd.totalUnidades||rd.totalValor;
+  const fmt=v=>fmtV(v,isR);
+  const getCob=r=>isR?r.cobProjArred:r.uni?.cobProjArred||r.cobProjArred;
   const urg=reps.filter(r=>getCob(r)<0.7).length;
   const bat=reps.filter(r=>getCob(r)>=1.0).length;
-  return`<div class="space-y">
-    <div class="grid g4 gap-3">
+  return`<div class="sy">
+    <div class="g4 gap4" style="display:grid">
       ${kpi('Cota Total',fmt(totals.cota),`${reps.length} representantes`,'',0)}
       ${kpi('Realizado',fmt(totals.realizado),`${totals.cota>0?((totals.realizado/totals.cota)*100).toFixed(1):'0'}% da cota`,totals.realizado>=totals.cota?'success':'warning',totals.cota>0?totals.realizado/totals.cota:0,true)}
       ${kpi('Projeção',fmt(totals.projArred),`Cob. ${fp(totals.cobProjArred)}`,totals.cobProjArred>=1?'success':'warning',Math.min(totals.cobProjArred,1.5),true)}
       ${kpi('Alertas',`${urg} urgentes`,`${bat} acima da meta`,urg>0?'danger':'success')}
     </div>
-    ${rPodium(reps,isR,fmt)}
+    ${rPodium(reps,isR,fmt,getCob)}
     <div>
-      <h3 style="font-size:.9rem;font-weight:700;margin-bottom:.875rem;display:flex;align-items:center;gap:.5rem">${ic('users',16)} Ranking Completo</h3>
-      <div class="grid g3 gap-4">${reps.map((r,i)=>rRepCard(r,i,isR,fmt)).join('')}</div>
+      <h3 style="font-size:.88rem;font-weight:700;margin-bottom:.8rem;display:flex;align-items:center;gap:.45rem">${ic('users',15)} Ranking Completo</h3>
+      <div class="g3 gap4" style="display:grid">${reps.map((r,i)=>rRepCard(r,i,isR,fmt,getCob)).join('')}</div>
     </div>
     <div>
-      <h3 style="font-size:.9rem;font-weight:700;margin-bottom:.875rem;display:flex;align-items:center;gap:.5rem">${ic('bars',16)} Tabela Comparativa</h3>
-      ${rRepTbl(reps,isR,fmt)}
+      <h3 style="font-size:.88rem;font-weight:700;margin-bottom:.8rem;display:flex;align-items:center;gap:.45rem">${ic('bars',15)} Tabela Comparativa</h3>
+      ${rRepTbl(reps,isR,fmt,getCob)}
     </div>
-    <div class="grid g2 gap-4">
-      <div class="cc">
-        <div class="ct">Cobertura Projetada</div>
-        <div class="cs"><span class="dot" style="background:hsl(142,71%,42%)"></span>≥100% <span style="margin:0 .4rem">|</span><span class="dot" style="background:hsl(38,92%,52%)"></span>70-99% <span style="margin:0 .4rem">|</span><span class="dot" style="background:hsl(4,86%,54%)"></span>&lt;70%</div>
-        <div id="rep-cob" style="height:${Math.max(280,reps.length*34)}px"></div>
-      </div>
-      <div class="cc">
-        <div class="ct">Δ Cota vs Demanda Proj.</div>
-        <div class="cs"><span class="dot" style="background:hsl(142,71%,42%)"></span>Positivo <span style="margin:0 .4rem">|</span><span class="dot" style="background:hsl(4,86%,54%)"></span>Negativo</div>
-        <div id="rep-delta" style="height:${Math.max(280,reps.length*34)}px"></div>
-      </div>
+    <div class="g2 gap4" style="display:grid">
+      <div class="cc"><div class="ct">Cobertura Projetada</div><div class="cs"><span class="dot" style="background:hsl(142,64%,38%)"></span>≥100% <span style="margin:0 .4rem">|</span><span class="dot" style="background:hsl(38,90%,46%)"></span>70-99% <span style="margin:0 .4rem">|</span><span class="dot" style="background:hsl(4,82%,50%)"></span>&lt;70%</div><div id="rep-cob" style="height:${Math.max(260,reps.length*32)}px"></div></div>
+      <div class="cc"><div class="ct">Δ Cota vs Demanda Proj.</div><div class="cs"><span class="dot" style="background:hsl(142,64%,38%)"></span>Positivo <span style="margin:0 .4rem">|</span><span class="dot" style="background:hsl(4,82%,50%)"></span>Negativo</div><div id="rep-delta" style="height:${Math.max(260,reps.length*32)}px"></div></div>
     </div>
-    ${rPriority(reps,'rep')}
+    ${rPriority(reps,'rep',getCob)}
   </div>`;
 }
-function rPodium(reps,isR,fmt){
-  if(reps.length<1)return'';
-  const sorted=[...reps].sort((a,b)=>(isR?b.cobProjArred:b.uni?.cobProjArred||0)-(isR?a.cobProjArred:a.uni?.cobProjArred||0));
+
+function rPodium(reps,isR,fmt,getCob){
+  if(!reps.length)return'';
+  const sorted=[...reps].sort((a,b)=>getCob(b)-getCob(a));
   const top=sorted.slice(0,Math.min(3,sorted.length));
-  const emo=['🥇','🥈','🥉'],rst=['gold','silver','bronze'];
-  return`<div style="background:linear-gradient(135deg,var(--card),var(--surface));border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow-sm)">
-    <h3 style="font-size:.9rem;font-weight:700;margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem">${ic('medal',16,'ts')} Top Representantes</h3>
-    <div class="grid g3 gap-3">
+  const emo=['🥇','🥈','🥉'],rnks=['gold','silver','bronze'];
+  return`<div style="background:linear-gradient(135deg,var(--card),var(--surf));border:1px solid var(--brd);border-radius:var(--r);padding:1.4rem;box-shadow:var(--sh1)">
+    <h3 style="font-size:.88rem;font-weight:700;margin-bottom:1.1rem;display:flex;align-items:center;gap:.45rem">${ic('medal',15,'ts')} Top Representantes</h3>
+    <div class="g3 gap3" style="display:grid">
     ${top.map((r,i)=>{
-      const cob=isR?r.cobProjArred:r.uni?.cobProjArred||0;
-      const delta=isR?r.deltaCota:r.uni?.deltaCota||0;
-      return`<div style="background:var(--card);border:1px solid ${i===0?'hsla(42,95%,50%,.4)':'var(--border)'};border-radius:var(--radius-sm);padding:1rem;text-align:center;position:relative;${i===0?'box-shadow:0 4px 20px hsla(42,95%,50%,.2)':''}">
-        <div style="position:absolute;top:.5rem;right:.5rem;font-size:1.1rem">${emo[i]}</div>
-        <div class="rnk ${rst[i]}" style="width:2.5rem;height:2.5rem;border-radius:.75rem;margin:0 auto .75rem;font-size:.85rem">${i+1}</div>
-        <div style="font-size:.78rem;font-weight:700;margin-bottom:.5rem;line-height:1.3">${r.nome}</div>
-        <div style="font-size:1.5rem;font-weight:800;color:var(--success);font-family:'Geist Mono',monospace;line-height:1">${fp(cob)}</div>
-        <div style="font-size:.65rem;color:var(--muted-fg);margin:.3rem 0">Cob. Projetada</div>
-        <div style="font-size:.7rem;font-weight:600;font-family:'Geist Mono',monospace;color:${delta>=0?'var(--success)':'var(--danger)'}">Δ ${delta>=0?'+':''}${fmt(delta)}</div>
+      const cob=getCob(r);
+      const getDelta=r=>isR?r.deltaCota:r.uni?.deltaCota??r.deltaCota;
+      const delta=getDelta(r);
+      return`<div style="background:var(--card);border:1px solid ${i===0?'hsla(42,95%,50%,.38)':'var(--brd)'};border-radius:var(--rsm);padding:.95rem;text-align:center;position:relative;${i===0?'box-shadow:0 4px 18px hsla(42,95%,50%,.18)':''}">
+        <div style="position:absolute;top:.4rem;right:.4rem;font-size:1rem">${emo[i]}</div>
+        <div class="rnk ${rnks[i]}" style="width:2.3rem;height:2.3rem;border-radius:.65rem;margin:0 auto .65rem;font-size:.8rem">${i+1}</div>
+        <div style="font-size:.75rem;font-weight:700;margin-bottom:.45rem;line-height:1.3">${r.nome}</div>
+        <div style="font-size:1.4rem;font-weight:800;color:var(--s);font-family:'Geist Mono',monospace;line-height:1">${fp(cob)}</div>
+        <div style="font-size:.62rem;color:var(--mfg);margin:.25rem 0">Cob. Projetada</div>
+        <div style="font-size:.68rem;font-weight:600;font-family:'Geist Mono',monospace;color:${delta>=0?'var(--s)':'var(--d)'}">Δ ${delta>=0?'+':''}${fmt(delta)}</div>
       </div>`;
     }).join('')}
     </div>
   </div>`;
 }
-function rRepCard(r,idx,isR,fmt){
-  const cob=isR?r.cobProjArred:r.uni?.cobProjArred||0;
-  const real=isR?r.realizado:r.uni?.realizado||0;
-  const cota=isR?r.cota:r.uni?.cota||0;
-  const proj=isR?r.projArred:r.uni?.projArred||0;
-  const delta=isR?r.deltaCota:r.uni?.deltaCota||0;
-  const sCol=cob>=1?'var(--success)':cob>=.7?'var(--warning)':'var(--danger)';
-  const sLbl=cob>=1?'✅ Batendo':cob>=.7?'⚠️ Atenção':'🚨 Atuar';
+
+function rRepCard(r,idx,isR,fmt,getCob){
+  const cob=getCob(r);
+  const real=isR?r.realizado:r.uni?.realizado??r.realizado;
+  const cota=isR?r.cota:r.uni?.cota??r.cota;
+  const proj=isR?r.projArred:r.uni?.projArred??r.projArred;
+  const delta=isR?r.deltaCota:r.uni?.deltaCota??r.deltaCota;
+  const sC=cob>=1?'var(--s)':cob>=.7?'var(--w)':'var(--d)';
+  const sL=cob>=1?'✅ Batendo':cob>=.7?'⚠️ Atenção':'🚨 Atuar';
   const rnk=idx===0?'gold':idx===1?'silver':idx===2?'bronze':'other';
-  return`<div class="rep-card ${delta>=0?'bl':'at'}">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.875rem;gap:.5rem">
-      <div style="display:flex;align-items:center;gap:.6rem;min-width:0">
+  return`<div class="rc ${delta>=0?'rbl':'rat'}">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.8rem;gap:.45rem">
+      <div style="display:flex;align-items:center;gap:.5rem;min-width:0">
         <div class="rnk ${rnk}">${idx+1}</div>
-        <div style="min-width:0"><div style="font-size:.8rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.nome}</div>${r.codigo?`<div style="font-size:.62rem;color:var(--muted-fg);font-family:'Geist Mono',monospace">${r.codigo}</div>`:''}</div>
+        <div style="min-width:0"><div style="font-size:.77rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.nome}</div>${r.codigo?`<div style="font-size:.6rem;color:var(--mfg);font-family:'Geist Mono',monospace">${r.codigo}</div>`:''}</div>
       </div>
-      <span style="padding:.15rem .5rem;border-radius:999px;font-size:.6rem;font-weight:700;white-space:nowrap;background:${sCol}22;color:${sCol}">${sLbl}</span>
+      <span class="stbadge" style="background:${sC}1a;color:${sC}">${sL}</span>
     </div>
-    <div style="display:flex;justify-content:space-between;font-size:.65rem;color:var(--muted-fg);margin-bottom:.3rem"><span>Cob. Projetada</span><span class="mono fw8" style="color:${sCol}">${fp(cob)}</span></div>
-    <div class="cob-tr"><div class="cob-f" style="width:${Math.min(cob/1.5*100,100)}%;background:${sCol}"></div></div>
-    <div class="grid g2 gap-2" style="margin-top:.75rem">
-      <div class="ms"><div class="ms-l">Realizado</div><div class="ms-v mono">${fmt(real)}</div><div style="font-size:.62rem;color:${cota>0&&real/cota>=1?'var(--success)':'var(--warning)'}">${cota>0?((real/cota)*100).toFixed(1):0}% cota</div></div>
-      <div class="ms"><div class="ms-l">Δ Cota</div><div class="ms-v mono" style="color:${delta>=0?'var(--success)':'var(--danger)'}">${delta>=0?'+':''}${fmt(delta)}</div><div style="font-size:.62rem;color:var(--muted-fg)">vs dem. proj.</div></div>
+    <div style="display:flex;justify-content:space-between;font-size:.62rem;color:var(--mfg);margin-bottom:.28rem"><span>Cob. Projetada</span><span class="mono fw8" style="color:${sC}">${fp(cob)}</span></div>
+    <div class="ctr"><div class="ctf" style="width:${Math.min(cob/1.5*100,100)}%;background:${sC}"></div></div>
+    <div class="g2 gap2" style="display:grid;margin-top:.7rem">
+      <div class="ms"><div class="msl">Realizado</div><div class="msv mono">${fmt(real)}</div><div style="font-size:.58rem;color:${cota>0&&real/cota>=1?'var(--s)':'var(--w)'}">${cota>0?((real/cota)*100).toFixed(1):0}% cota</div></div>
+      <div class="ms"><div class="msl">Δ Cota</div><div class="msv mono" style="color:${delta>=0?'var(--s)':'var(--d)'}">${delta>=0?'+':''}${fmt(delta)}</div></div>
     </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.75rem;padding:.5rem .65rem;background:var(--surface);border-radius:.5rem">
-      <span style="font-size:.65rem;color:var(--muted-fg)">Projeção</span>
-      <span class="mono fw7" style="font-size:.78rem">${fmt(proj)}</span>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.7rem;padding:.45rem .6rem;background:var(--surf);border-radius:.4rem">
+      <span style="font-size:.62rem;color:var(--mfg)">Projeção</span>
+      <span class="mono fw7" style="font-size:.75rem">${fmt(proj)}</span>
     </div>
   </div>`;
 }
-function rRepTbl(reps,isR,fmt){
-  const sorted=[...reps].sort((a,b)=>(isR?a.cobProjArred:a.uni?.cobProjArred||0)-(isR?b.cobProjArred:b.uni?.cobProjArred||0));
-  const sc=c=>c>=1?'var(--success)':c>=.7?'var(--warning)':'var(--danger)';
+
+function rRepTbl(reps,isR,fmt,getCob){
+  const sorted=[...reps].sort((a,b)=>getCob(a)-getCob(b));
+  const sc=c=>c>=1?'var(--s)':c>=.7?'var(--w)':'var(--d)';
   return`<div class="tw ox"><table>
     <thead><tr><th>#</th><th>Representante</th><th class="r">Cota</th><th class="r">Realizado</th><th class="r">Cob. Real</th><th class="r">Projeção</th><th class="r">Cob. Proj.</th><th class="r">Δ Cota</th><th class="c">Status</th></tr></thead>
     <tbody>${sorted.map((r,i)=>{
-      const cob=isR?r.cobProjArred:r.uni?.cobProjArred||0;
-      const real=isR?r.realizado:r.uni?.realizado||0;
-      const cota=isR?r.cota:r.uni?.cota||0;
-      const proj=isR?r.projArred:r.uni?.projArred||0;
-      const cobR=isR?r.cobReal:r.uni?.cobReal||0;
-      const delta=isR?r.deltaCota:r.uni?.deltaCota||0;
+      const cob=getCob(r);
+      const real=isR?r.realizado:r.uni?.realizado??r.realizado;
+      const cota=isR?r.cota:r.uni?.cota??r.cota;
+      const proj=isR?r.projArred:r.uni?.projArred??r.projArred;
+      const cobR=isR?r.cobReal:r.uni?.cobReal??r.cobReal;
+      const delta=isR?r.deltaCota:r.uni?.deltaCota??r.deltaCota;
       return`<tr>
-        <td style="color:var(--muted-fg)">${sorted.length-i}</td>
-        <td><div style="font-weight:600;font-size:.78rem">${r.nome}</div>${r.codigo?`<div style="font-size:.62rem;color:var(--muted-fg);font-family:'Geist Mono',monospace">${r.codigo}</div>`:''}</td>
-        <td class="r mono" style="color:var(--muted-fg)">${fmt(cota)}</td>
+        <td style="color:var(--mfg);font-size:.7rem">${sorted.length-i}</td>
+        <td><div style="font-weight:600;font-size:.75rem">${r.nome}</div>${r.codigo?`<div style="font-size:.6rem;color:var(--mfg);font-family:'Geist Mono',monospace">${r.codigo}</div>`:''}</td>
+        <td class="r mono" style="color:var(--mfg)">${fmt(cota)}</td>
         <td class="r mono fw6">${fmt(real)}</td>
         <td class="r mono">${fp(cobR)}</td>
-        <td class="r mono" style="color:var(--muted-fg)">${fmt(proj)}</td>
+        <td class="r mono" style="color:var(--mfg)">${fmt(proj)}</td>
         <td class="r mono fw8" style="color:${sc(cob)}">${fp(cob)}</td>
-        <td class="r"><span class="mono fw6" style="color:${delta>=0?'var(--success)':'var(--danger)'}">${delta>=0?'+':''}${fmt(delta)}</span></td>
-        <td class="c" style="font-size:.67rem;font-weight:700;color:${sc(cob)}">${cob>=1?'✅ Batendo':cob>=.7?'⚠️ Atenção':'🚨 Atuar'}</td>
+        <td class="r"><span class="mono fw6" style="color:${delta>=0?'var(--s)':'var(--d)'}">${delta>=0?'+':''}${fmt(delta)}</span></td>
+        <td class="c" style="font-size:.62rem;font-weight:700;color:${sc(cob)}">${cob>=1?'✅ Batendo':cob>=.7?'⚠️ Atenção':'🚨 Atuar'}</td>
       </tr>`;
     }).join('')}</tbody>
   </table></div>`;
 }
-function rFamView(rows){
-  const fams=[...new Set(rows.map(r=>r.familia))];
-  const fmt=v=>tab==='reais'?fc(v):fn(v);
-  const sC=c=>c>=1?'hsl(142,71%,40%)':c>=.7?'hsl(38,92%,50%)':'hsl(4,86%,52%)';
-  const sL=c=>c>=1?'✅ Batendo Meta':c>=.7?'⚠️ Atenção':'🚨 Atuar Urgente';
-  const sums=fams.map(fam=>{
-    const it=rows.filter(r=>r.familia===fam);
-    const tC=it.reduce((s,r)=>s+r.cota,0),tR=it.reduce((s,r)=>s+r.realizado,0),tP=it.reduce((s,r)=>s+r.projArred,0);
-    const cob=tC>0?tP/tC:0,delta=it.reduce((s,r)=>s+r.deltaCota,0);
-    return{fam,tC,tR,tP,cob,delta,count:it.length};
-  });
-  return`<div class="grid g3 gap-4">${sums.map(({fam,tC,tR,tP,cob,delta,count})=>{
-    const sc=sC(cob),pR=tC>0?(tR/tC)*100:0,pP=cob*100;
-    return`<div class="card card-h">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem">
-        <span style="font-weight:700">${fam}</span>
-        <span style="padding:.15rem .5rem;border-radius:999px;font-size:.6rem;font-weight:700;background:${sc}22;color:${sc}">${sL(cob)}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted-fg);margin-bottom:.25rem"><span>Cobertura Projetada</span><span class="mono fw8" style="color:${sc}">${pP.toFixed(1)}%</span></div>
-      <div style="height:.45rem;background:var(--muted);border-radius:4px;overflow:hidden;margin-bottom:.875rem"><div style="height:100%;border-radius:4px;background:${sc};width:${Math.min(pP,100)}%;transition:width .6s ease"></div></div>
-      <div class="grid g2 gap-2" style="font-size:.72rem">
-        <div class="ms"><div class="ms-l">Realizado</div><div class="mono fw7">${fmt(tR)}</div><div style="color:${pR>=100?'var(--success)':'var(--warning)'}">${pR.toFixed(1)}% da cota</div></div>
-        <div class="ms"><div class="ms-l">Projeção</div><div class="mono fw7">${fmt(tP)}</div><div style="color:${delta>=0?'var(--success)':'var(--danger)'}">Δ ${delta>=0?'+':''}${fmt(delta)}</div></div>
-      </div>
-      <p style="font-size:.67rem;color:var(--muted-fg);margin-top:.625rem">${count} produto${count!==1?'s':''}</p>
-    </div>`;
-  }).join('')}</div>`;
-}
-function rProdTbl(rows){
-  const fmt=v=>tab==='reais'?fc(v):fn(v);
-  const sorted=[...rows].sort((a,b)=>a.cobProjArred-b.cobProjArred);
-  const FC={'FOCO 1':'hsl(239,84%,67%)','FOCO 2':'hsl(38,92%,50%)','FOCO 3':'hsl(160,84%,39%)','DEMAIS PRODUTOS':'hsl(215,16%,57%)','LANCAMENTO':'hsl(330,81%,60%)'};
-  const sc=c=>c>=1?'var(--success)':c>=.7?'var(--warning)':'var(--danger)';
-  return`<div class="tw ox"><table>
-    <thead><tr><th>Família</th><th>Produto</th><th class="r">Cota</th><th class="r">Realizado</th><th class="r">Cob. Real</th><th class="r">Proj.</th><th class="r">Cob. Proj.</th><th class="r">Δ Cota</th><th class="c">Status</th></tr></thead>
-    <tbody>${sorted.map(row=>{
-      const fc2=FC[row.familia]||'hsl(215,16%,57%)';
-      return`<tr>
-        <td><span style="padding:.1rem .5rem;border-radius:999px;font-size:.6rem;font-weight:600;background:${fc2}22;color:${fc2}">${row.familia}</span></td>
-        <td style="font-weight:600">${row.produto.replace(/ MF_/,'').replace(/ HYQ/,'').replace(/_$/,'')}</td>
-        <td class="r mono" style="color:var(--muted-fg)">${fmt(row.cota)}</td><td class="r mono fw6">${fmt(row.realizado)}</td>
-        <td class="r mono">${fp(row.cobReal)}</td><td class="r mono" style="color:var(--muted-fg)">${fmt(row.projArred)}</td>
-        <td class="r mono fw8" style="color:${sc(row.cobProjArred)}">${fp(row.cobProjArred)}</td>
-        <td class="r"><span class="mono fw6" style="color:${row.deltaCota>=0?'var(--success)':'var(--danger)'}">${row.deltaCota>=0?'+':''}${fmt(row.deltaCota)}</span></td>
-        <td class="c" style="font-size:.65rem;font-weight:700;color:${sc(row.cobProjArred)}">${row.cobProjArred>=1?'✅':row.cobProjArred>=.7?'⚠️':'🚨'}</td>
-      </tr>`;
-    }).join('')}</tbody>
-  </table></div>`;
-}
-function rCobChart(rows){return`<div class="cc"><div class="ct">Cobertura Projetada por Produto</div><div class="cs"><span class="dot" style="background:hsl(142,71%,42%)"></span>≥100% <span style="margin:0 .4rem">|</span><span class="dot" style="background:hsl(38,92%,52%)"></span>70–99% <span style="margin:0 .4rem">|</span><span class="dot" style="background:hsl(4,86%,54%)"></span>&lt;70%</div><div id="ch-cob" style="height:${Math.max(320,rows.length*32)}px"></div></div>`}
-function rDeltaChart(rows){return`<div class="cc"><div class="ct">Δ Cota vs Demanda Projetada</div><div class="cs"><span class="dot" style="background:hsl(142,71%,42%)"></span>Positivo <span style="margin:0 .4rem">|</span><span class="dot" style="background:hsl(4,86%,54%)"></span>Negativo</div><div id="ch-delta" style="height:${Math.max(320,rows.length*32)}px"></div></div>`}
-function rPriority(items,type){
-  const getCob=r=>type==='rep'?r.cobProjArred:r.cobProjArred;
-  const worst=[...items].sort((a,b)=>getCob(a)-getCob(b)).slice(0,5);
-  const best=[...items].sort((a,b)=>getCob(b)-getCob(a)).slice(0,5);
-  const row=(r,good)=>`<div class="pr"><div><div style="font-size:.8rem;font-weight:600">${type==='rep'?r.nome:r.produto?r.produto.replace(/ MF_/,'').replace(/ HYQ/,'').replace(/_$/,''):r.familia}</div><div style="font-size:.67rem;color:var(--muted-fg)">${type==='rep'?r.codigo||'':r.familia||''}</div></div><span class="mono fw8" style="color:${good?'var(--success)':'var(--danger)'}">${fp(getCob(r))}</span></div>`;
-  return`<div class="grid g2 gap-4">
-    <div class="card" style="border-color:hsla(4,86%,48%,.3)">
-      <h3 style="font-size:.875rem;font-weight:700;color:var(--danger);display:flex;align-items:center;gap:.5rem;margin-bottom:.875rem">${ic('alert',15)} Atuar Urgente</h3>
+
+/* ══════════════════════════
+   PRIORITY PANEL
+══════════════════════════ */
+function rPriority(items,type,getCob){
+  const _cob=r=>type==='rep'?(getCob?getCob(r):r.cobProjArred):r.cobProjArred;
+  const _nm=r=>type==='rep'?r.nome:(r.produto?r.produto.replace(/ MF_/,'').replace(/ HYQ/,'').replace(/_$/,''):r.familia||'');
+  const _sub=r=>type==='rep'?(r.codigo||''):(r.familia||'');
+  const worst=[...items].sort((a,b)=>_cob(a)-_cob(b)).slice(0,5);
+  const best=[...items].sort((a,b)=>_cob(b)-_cob(a)).slice(0,5);
+  const row=(r,good)=>`<div class="pr"><div><div style="font-size:.78rem;font-weight:600">${_nm(r)}</div><div style="font-size:.65rem;color:var(--mfg)">${_sub(r)}</div></div><span class="mono fw8" style="color:${good?'var(--s)':'var(--d)'}">${fp(_cob(r))}</span></div>`;
+  return`<div class="g2 gap4" style="display:grid">
+    <div class="card" style="border-color:hsla(4,82%,47%,.28)">
+      <h3 style="font-size:.84rem;font-weight:700;color:var(--d);display:flex;align-items:center;gap:.45rem;margin-bottom:.8rem">${ic('alert',14)} Atuar Urgente</h3>
       ${worst.map(r=>row(r,false)).join('')}
     </div>
-    <div class="card" style="border-color:hsla(142,71%,35%,.3)">
-      <h3 style="font-size:.875rem;font-weight:700;color:var(--success);display:flex;align-items:center;gap:.5rem;margin-bottom:.875rem">${ic('shield',15)} Blindar — Top</h3>
+    <div class="card" style="border-color:hsla(142,64%,34%,.28)">
+      <h3 style="font-size:.84rem;font-weight:700;color:var(--s);display:flex;align-items:center;gap:.45rem;margin-bottom:.8rem">${ic('shield',14)} Blindar — Top</h3>
       ${best.map(r=>row(r,true)).join('')}
     </div>
   </div>`;
 }
-// Recharts
+
+/* ══════════════════════════
+   RECHARTS
+══════════════════════════ */
 function mountCharts(){
   const{BarChart,Bar,XAxis,YAxis,CartesianGrid,Tooltip,ResponsiveContainer,ReferenceLine,Cell,LabelList}=Recharts;
   function mkChart(id,data,dk,refX,ttFmt,lblFmt){
-    const el=document.getElementById(id);if(!el)return;
+    const el=document.getElementById(id);if(!el||!data.length)return;
     const lbl=props=>{
       const{x,y,width,height,index}=props;const e=data[index];if(!e)return null;
       const isP=e[dk]>=0;
-      return React.createElement('text',{x:isP?x+width+6:x+width-6,y:y+height/2,fill:'var(--fg)',fontSize:10,fontWeight:700,textAnchor:isP?'start':'end',dominantBaseline:'middle'},lblFmt(e));
+      return React.createElement('text',{x:isP?x+width+5:x+width-5,y:y+height/2,fill:'var(--fg)',fontSize:10,fontWeight:700,textAnchor:isP?'start':'end',dominantBaseline:'middle'},lblFmt(e));
     };
     ReactDOM.render(
       React.createElement(ResponsiveContainer,{width:'100%',height:'100%'},
-        React.createElement(BarChart,{data,layout:'vertical',margin:{left:8,right:75}},
-          React.createElement(CartesianGrid,{strokeDasharray:'3 3',horizontal:false,stroke:'var(--chart-grid)',opacity:.5}),
-          React.createElement(XAxis,{type:'number',tick:{fontSize:11,fill:'var(--chart-text)',fontWeight:500},axisLine:{stroke:'var(--chart-grid)'},tickLine:{stroke:'var(--chart-grid)'}}),
-          React.createElement(YAxis,{type:'category',dataKey:'name',tick:{fontSize:11,fill:'var(--chart-text)',fontWeight:500},width:145,axisLine:false,tickLine:false}),
-          React.createElement(Tooltip,{formatter:ttFmt,contentStyle:{background:'var(--card)',border:'1px solid var(--border)',borderRadius:10,color:'var(--fg)',fontSize:12,fontWeight:600,padding:'10px 14px',boxShadow:'0 8px 30px rgba(0,0,0,.2)'}}),
-          refX!==null?React.createElement(ReferenceLine,{x:refX,stroke:refX===0?'var(--fg)':'hsl(142,71%,42%)',strokeDasharray:refX===0?'':'4 4',strokeWidth:1.5,...(refX===100?{label:{value:'Meta 100%',position:'top',fontSize:11,fill:'hsl(142,71%,42%)',fontWeight:700}}:{})}):null,
-          React.createElement(Bar,{dataKey:dk,radius:[0,4,4,0],barSize:18,name:''},
+        React.createElement(BarChart,{data,layout:'vertical',margin:{left:8,right:72}},
+          React.createElement(CartesianGrid,{strokeDasharray:'3 3',horizontal:false,stroke:'var(--cgrid)',opacity:.5}),
+          React.createElement(XAxis,{type:'number',tick:{fontSize:10,fill:'var(--ctxt)',fontWeight:500},axisLine:{stroke:'var(--cgrid)'},tickLine:{stroke:'var(--cgrid)'}}),
+          React.createElement(YAxis,{type:'category',dataKey:'name',tick:{fontSize:10,fill:'var(--ctxt)',fontWeight:500},width:140,axisLine:false,tickLine:false}),
+          React.createElement(Tooltip,{formatter:ttFmt,contentStyle:{background:'var(--card)',border:'1px solid var(--brd)',borderRadius:9,color:'var(--fg)',fontSize:11,fontWeight:600,padding:'9px 13px',boxShadow:'0 8px 28px rgba(0,0,0,.18)'}}),
+          refX!==null?React.createElement(ReferenceLine,{x:refX,stroke:refX===0?'var(--fg)':'hsl(142,64%,40%)',strokeDasharray:refX===0?'':'4 4',strokeWidth:1.5,...(refX===100?{label:{value:'Meta 100%',position:'top',fontSize:10,fill:'hsl(142,64%,40%)',fontWeight:700}}:{})}):null,
+          React.createElement(Bar,{dataKey:dk,radius:[0,4,4,0],barSize:17,name:''},
             ...data.map((e,i)=>React.createElement(Cell,{key:i,fill:e.fill})),
             React.createElement(LabelList,{content:lbl})
           )
@@ -780,99 +990,83 @@ function mountCharts(){
       ),el
     );
   }
-  // product charts
-  if(section==='produto'){
-    const rows=tab==='reais'?(dashData.valorRows||[]):(dashData.unidadesRows||[]);
+  const isR=tab==='reais';
+  // Prod charts
+  if(section==='produto'&&dashData.famData){
+    const rows=isR?dashData.famData.valorRows:dashData.famData.unidadesRows;
     if(document.getElementById('ch-cob')){
-      const data=[...rows].sort((a,b)=>a.cobProjArred-b.cobProjArred).map(r=>({name:r.produto.replace(/ MF_/,'').replace(/ HYQ/,'').replace(/_$/,''),cobProj:parseFloat((r.cobProjArred*100).toFixed(1)),fill:r.cobProjArred>=1?'hsl(142,71%,42%)':r.cobProjArred>=.7?'hsl(38,92%,52%)':'hsl(4,86%,54%)'}));
+      const data=[...rows].sort((a,b)=>a.cobProjArred-b.cobProjArred).map(r=>({name:r.produto.replace(/ MF_/,'').replace(/ HYQ/,'').replace(/_$/,''),cobProj:parseFloat((r.cobProjArred*100).toFixed(1)),fill:r.cobProjArred>=1?'hsl(142,64%,40%)':r.cobProjArred>=.7?'hsl(38,90%,48%)':'hsl(4,82%,52%)'}));
       mkChart('ch-cob',data,'cobProj',100,v=>[`${v}%`,'Cob. Projetada'],e=>`${e.cobProj.toFixed(1)}%`);
     }
     if(document.getElementById('ch-delta')){
       const sorted=[...rows].sort((a,b)=>a.deltaCota-b.deltaCota);
-      const mA=Math.max(...sorted.map(r=>Math.abs(r.deltaCota)),.001),isPct=mA<=10;
-      const fV=v=>isPct?v.toFixed(2):Math.abs(v)>=1e6?`${(v/1e6).toFixed(1)}M`:Math.abs(v)>=1000?`${(v/1000).toFixed(1)}k`:v.toFixed(0);
-      const data=sorted.map(r=>({name:r.produto.replace(/ MF_/,'').replace(/ HYQ/,'').replace(/_$/,''),delta:isPct?parseFloat(r.deltaCota.toFixed(2)):parseFloat(r.deltaCota.toFixed(0)),fill:r.deltaCota>=0?'hsl(142,71%,42%)':'hsl(4,86%,54%)'}));
-      mkChart('ch-delta',data,'delta',0,v=>[isPct?`${v.toFixed(2)}%`:fV(v),'Δ Cota'],e=>fV(e.delta));
+      const mA=Math.max(...sorted.map(r=>Math.abs(r.deltaCota)),.001);
+      const fV=v=>mA<=10?v.toFixed(2):Math.abs(v)>=1e6?`${(v/1e6).toFixed(1)}M`:Math.abs(v)>=1000?`${(v/1000).toFixed(1)}k`:v.toFixed(0);
+      const data=sorted.map(r=>({name:r.produto.replace(/ MF_/,'').replace(/ HYQ/,'').replace(/_$/,''),delta:parseFloat(r.deltaCota.toFixed(mA<=10?2:0)),fill:r.deltaCota>=0?'hsl(142,64%,40%)':'hsl(4,82%,52%)'}));
+      mkChart('ch-delta',data,'delta',0,v=>[fV(v),'Δ Cota'],e=>fV(e.delta));
     }
   }
-  // rep charts
-  if(section==='rep'){
-    const reps=dashData.reps||[];const isR=tab==='reais';
+  // Rep charts
+  if(section==='rep'&&dashData.repData){
+    const reps=dashData.repData.reps;
+    const getCob=r=>isR?r.cobProjArred:r.uni?.cobProjArred||r.cobProjArred;
+    const getDelta=r=>isR?r.deltaCota:r.uni?.deltaCota??r.deltaCota;
     if(document.getElementById('rep-cob')){
-      const data=[...reps].sort((a,b)=>(isR?a.cobProjArred:a.uni?.cobProjArred||0)-(isR?b.cobProjArred:b.uni?.cobProjArred||0)).map(r=>{const c=isR?r.cobProjArred:r.uni?.cobProjArred||0;return{name:r.nome,cobProj:parseFloat((c*100).toFixed(1)),fill:c>=1?'hsl(142,71%,42%)':c>=.7?'hsl(38,92%,52%)':'hsl(4,86%,54%)'};});
+      const data=[...reps].sort((a,b)=>getCob(a)-getCob(b)).map(r=>{const c=getCob(r);return{name:r.nome,cobProj:parseFloat((c*100).toFixed(1)),fill:c>=1?'hsl(142,64%,40%)':c>=.7?'hsl(38,90%,48%)':'hsl(4,82%,52%)'};});
       mkChart('rep-cob',data,'cobProj',100,v=>[`${v}%`,'Cob. Projetada'],e=>`${e.cobProj.toFixed(1)}%`);
     }
     if(document.getElementById('rep-delta')){
-      const sorted=[...reps].sort((a,b)=>(isR?a.deltaCota:a.uni?.deltaCota||0)-(isR?b.deltaCota:b.uni?.deltaCota||0));
+      const sorted=[...reps].sort((a,b)=>getDelta(a)-getDelta(b));
       const fV=v=>Math.abs(v)>=1e6?`${(v/1e6).toFixed(1)}M`:Math.abs(v)>=1000?`${(v/1000).toFixed(1)}k`:v.toFixed(0);
-      const data=sorted.map(r=>{const d=isR?r.deltaCota:r.uni?.deltaCota||0;return{name:r.nome,delta:parseFloat(d.toFixed(0)),fill:d>=0?'hsl(142,71%,42%)':'hsl(4,86%,54%)'};});
+      const data=sorted.map(r=>{const d=getDelta(r);return{name:r.nome,delta:parseFloat(d.toFixed(0)),fill:d>=0?'hsl(142,64%,40%)':'hsl(4,82%,52%)'};});
       mkChart('rep-delta',data,'delta',0,v=>[fV(v),'Δ Cota'],e=>fV(e.delta));
     }
   }
 }
-// Actions
+
+/* ══════════════════════════
+   ACTIONS
+══════════════════════════ */
 function toggleTheme(){applyTheme(theme==='dark'?'light':'dark');render()}
 async function doOut(){await sb.auth.signOut();me=null;dashData=null;render()}
-function doNew(){dashData=null;vFile=null;uFile=null;err=null;render()}
+function doNew(){dashData=null;files={famV:null,famU:null,repV:null,repU:null};err=null;render()}
 function setTab(t){tab=t;render()}
 function setView(v){view=v;render()}
 function setSec(s){section=s;render()}
 async function doSave(){
   if(!dashData||saving)return;saving=true;
-  const btn=document.getElementById('btn-sv');if(btn){btn.disabled=true;btn.innerHTML=`<div class="sp"></div>`}
+  const btn=document.getElementById('bsv');if(btn){btn.disabled=true;btn.innerHTML=`<div class="sp"></div>`}
   try{await saveDash(dashData);toast('Análise salva!','success')}
   catch{toast('Erro ao salvar.','error')}
-  finally{saving=false;if(btn){btn.disabled=false;btn.innerHTML=`${ic('save',13)} <span class="hide-mob">Salvar</span>`}}
+  finally{saving=false;if(btn){btn.disabled=false;btn.innerHTML=`${ic('save',13)} <span class="hm">Salvar</span>`}}
 }
-// PDF Export — FIXED: section by section, no giant canvas
+/* PDF — child-by-child to avoid giant canvas */
 async function doPDF(){
-  toast('Gerando PDF...','info',10000);
+  toast('Gerando PDF…','info',10000);
   try{
     const{jsPDF}=window.jspdf;
     const pdf=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
     const W=297,H=210,m=10;
-    // Capture each major section separately
-    const targets=[
-      {id:'dash-main',scale:1.5},
-    ];
-    // Fallback: capture individual grid/card sections if main is too big
-    let firstPage=true;
-    for(const{id,scale}of targets){
-      const el=document.getElementById(id);if(!el)continue;
-      // Split into chunks by direct children
-      const children=Array.from(el.children);
-      for(const child of children){
-        if(!child.offsetHeight||child.offsetHeight<10)continue;
-        let canv;
-        try{
-          canv=await html2canvas(child,{
-            scale,useCORS:true,allowTaint:true,
-            backgroundColor:theme==='dark'?'#161b27':'#f5f6f8',
-            logging:false,imageTimeout:0,
-          });
-        }catch(e){console.warn('canvas err',e);continue}
-        if(!firstPage)pdf.addPage();firstPage=false;
-        const iW=canv.width,iH=canv.height;
-        const ratio=Math.min((W-m*2)/iW,(H-m*2)/iH);
-        const dW=iW*ratio,dH=iH*ratio;
-        pdf.addImage(canv.toDataURL('image/jpeg',.85),'JPEG',(W-dW)/2,(H-dH)/2,dW,dH);
-      }
+    const el=document.getElementById('dm');if(!el)return;
+    const kids=Array.from(el.children).filter(c=>c.offsetHeight>10);
+    let first=true;
+    for(const kid of kids){
+      const canv=await html2canvas(kid,{scale:1.7,useCORS:true,allowTaint:true,backgroundColor:theme==='dark'?'#141820':'#f4f5f8',logging:false,imageTimeout:0});
+      if(!first)pdf.addPage();first=false;
+      const r=Math.min((W-m*2)/canv.width,(H-m*2)/canv.height);
+      const dW=canv.width*r,dH=canv.height*r;
+      pdf.addImage(canv.toDataURL('image/jpeg',.86),'JPEG',(W-dW)/2,(H-dH)/2,dW,dH);
     }
     pdf.save('analise-360.pdf');
     toast('PDF exportado!','success');
-  }catch(e){console.error(e);toast('Erro ao exportar: '+e.message,'error')}
+  }catch(e){console.error(e);toast('Erro: '+e.message,'error')}
 }
 async function doPNG(){
-  const el=document.getElementById('dash-main');if(!el)return;
-  toast('Gerando imagem...','info',8000);
+  const el=document.getElementById('dm');if(!el)return;
+  toast('Gerando imagem…','info',8000);
   try{
-    const canv=await html2canvas(el,{
-      scale:2,useCORS:true,allowTaint:true,
-      backgroundColor:theme==='dark'?'#161b27':'#f5f6f8',
-      logging:false,imageTimeout:0,windowWidth:1360,
-    });
-    const a=document.createElement('a');
-    a.download='analise-360.png';a.href=canv.toDataURL('image/png');a.click();
+    const canv=await html2canvas(el,{scale:2,useCORS:true,allowTaint:true,backgroundColor:theme==='dark'?'#141820':'#f4f5f8',logging:false,imageTimeout:0,windowWidth:1380});
+    const a=document.createElement('a');a.download='analise-360.png';a.href=canv.toDataURL('image/png');a.click();
     toast('Imagem exportada!','success');
   }catch(e){console.error(e);toast('Erro: '+e.message,'error')}
 }
