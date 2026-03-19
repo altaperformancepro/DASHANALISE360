@@ -604,7 +604,7 @@ async function submitAuth() {
   btn.textContent = 'Aguarde...';
   try {
     if (authMode === 'forgot') {
-      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/index.html#/reset-password' });
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.href.split('#')[0] + '#/reset-password' });
       if (error) throw error;
       toast('Email de recuperação enviado!', 'success');
       setAuthMode('login');
