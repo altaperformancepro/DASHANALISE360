@@ -412,6 +412,7 @@ async function tryLoad(){
 /* ─── STATE ─── */
 let files={famV:null,famU:null,repV:null,repU:null};
 let dashData=null,tab='reais',famView='familia',section='produto';
+// famView: 'familia' | 'produto' | 'cobertura' | 'delta'
 let loading=false,saving=false,err=null,authMode='login';
 
 /* ─── RENDER ─── */
@@ -600,6 +601,8 @@ function rDash(){
       <div class="vtabs">
         <button class="vt ${famView==='familia'?'on':''}" onclick="setFV('familia')">📂 Família</button>
         <button class="vt ${famView==='produto'?'on':''}" onclick="setFV('produto')">📋 Produto</button>
+        <button class="vt ${famView==='cobertura'?'on':''}" onclick="setFV('cobertura')">📊 Cobertura</button>
+        <button class="vt ${famView==='delta'?'on':''}" onclick="setFV('delta')">Δ Delta</button>
       </div>`:''}
     </div>
     <!-- Tab Reais/Unidades -->
@@ -644,16 +647,40 @@ function rFamSec(){
   const urg=rows.filter(r=>r.cobProjArred<0.7).length;
   const bat=rows.filter(r=>r.cobProjArred>=1.0).length;
 
-  return`<div class="sy">
-    <div class="g4 gap4" style="display:grid">
-      ${kpi('Cota Total',fmt(tot.cota),'Meta do período')}
-      ${kpi('Realizado',fmt(tot.realizado),`${tot.cota>0?((tot.realizado/tot.cota)*100).toFixed(1):'0'}% da cota`,tot.realizado>=tot.cota?'success':'warning',tot.cota>0?tot.realizado/tot.cota:0,true)}
-      ${kpi('Projeção',fmt(tot.projArred),`Cob. ${fp(tot.cobProjArred)}`,tot.cobProjArred>=1?'success':'warning',Math.min(tot.cobProjArred,1.5),true)}
-      ${kpi('Alertas',`${urg} urgentes`,`${bat} batendo meta`,urg>0?'danger':'success')}
-    </div>
-    ${famView==='familia'?rFamCards(fd,isR,fmt):rProdFull(rows,fd,isR,fmt)}
-    ${rPriority(rows,'prod')}
+  const kpis=`<div class="g4 gap4" style="display:grid">
+    ${kpi('Cota Total',fmt(tot.cota),'Meta do período')}
+    ${kpi('Realizado',fmt(tot.realizado),`${tot.cota>0?((tot.realizado/tot.cota)*100).toFixed(1):'0'}% da cota`,tot.realizado>=tot.cota?'success':'warning',tot.cota>0?tot.realizado/tot.cota:0,true)}
+    ${kpi('Projeção',fmt(tot.projArred),`Cob. ${fp(tot.cobProjArred)}`,tot.cobProjArred>=1?'success':'warning',Math.min(tot.cobProjArred,1.5),true)}
+    ${kpi('Alertas',`${urg} urgentes`,`${bat} batendo meta`,urg>0?'danger':'success')}
   </div>`;
+
+  if(famView==='familia'){
+    return`<div class="sy">${kpis}${rFamCards(fd,isR,fmt)}${rPriority(rows,'prod')}</div>`;
+  }
+  if(famView==='produto'){
+    return`<div class="sy">${kpis}${rProdFull(rows,fd,isR,fmt)}${rPriority(rows,'prod')}</div>`;
+  }
+  if(famView==='cobertura'){
+    const n=rows.length;
+    return`<div class="sy">${kpis}
+      <div class="cc" style="min-width:0;overflow:hidden">
+        <div class="ct">Cobertura Projetada por Produto</div>
+        <div class="cs"><span class="dot" style="background:hsl(142,62%,37%)"></span>≥100% <span style="margin:0 .35rem">|</span><span class="dot" style="background:hsl(38,88%,46%)"></span>70–99% <span style="margin:0 .35rem">|</span><span class="dot" style="background:hsl(4,80%,50%)"></span>&lt;70%</div>
+        <div id="ch-cob" style="height:${Math.max(320,n*32)}px;width:100%"></div>
+      </div>
+      ${rPriority(rows,'prod')}</div>`;
+  }
+  if(famView==='delta'){
+    const n=rows.length;
+    return`<div class="sy">${kpis}
+      <div class="cc" style="min-width:0;overflow:hidden">
+        <div class="ct">Δ Cota vs Demanda Projetada</div>
+        <div class="cs"><span class="dot" style="background:hsl(142,62%,37%)"></span>Positivo = supera <span style="margin:0 .35rem">|</span><span class="dot" style="background:hsl(4,80%,50%)"></span>Negativo = abaixo</div>
+        <div id="ch-delta" style="height:${Math.max(320,n*32)}px;width:100%"></div>
+      </div>
+      ${rPriority(rows,'prod')}</div>`;
+  }
+  return`<div class="sy">${kpis}${rFamCards(fd,isR,fmt)}${rPriority(rows,'prod')}</div>`;
 }
 
 /* Família — cards view */
@@ -678,12 +705,11 @@ function rFamCards(fd,isR,fmt){
   }).join('')}</div>`;
 }
 
-/* Produto — tabela + 2 gráficos */
+/* Produto — tabela */
 function rProdFull(rows,fd,isR,fmt){
   const sorted=[...rows].sort((a,b)=>a.cobProjArred-b.cobProjArred);
   const FC={'FOCO 1':'hsl(239,78%,65%)','FOCO 2':'hsl(38,88%,44%)','FOCO 3':'hsl(160,60%,34%)','DEMAIS PRODUTOS':'hsl(215,14%,54%)','LANCAMENTO':'hsl(330,75%,57%)'};
   const sc=c=>c>=1?'var(--s)':c>=.7?'var(--w)':'var(--d)';
-  const n=rows.length;
   return`<div class="sy">
     <!-- Tabela -->
     <div class="tw ox">
@@ -708,19 +734,6 @@ function rProdFull(rows,fd,isR,fmt){
           </tr>`;
         }).join('')}</tbody>
       </table>
-    </div>
-    <!-- Gráficos lado a lado -->
-    <div class="g2 gap4" style="display:grid;width:100%">
-      <div class="cc" style="min-width:0;overflow:hidden">
-        <div class="ct">Cobertura Projetada</div>
-        <div class="cs"><span class="dot" style="background:hsl(142,62%,37%)"></span>≥100% <span style="margin:0 .35rem">|</span><span class="dot" style="background:hsl(38,88%,46%)"></span>70–99% <span style="margin:0 .35rem">|</span><span class="dot" style="background:hsl(4,80%,50%)"></span>&lt;70%</div>
-        <div id="ch-cob" style="height:${Math.max(280,n*28)}px;width:100%"></div>
-      </div>
-      <div class="cc" style="min-width:0;overflow:hidden">
-        <div class="ct">Δ Cota vs Demanda Proj.</div>
-        <div class="cs"><span class="dot" style="background:hsl(142,62%,37%)"></span>Positivo <span style="margin:0 .35rem">|</span><span class="dot" style="background:hsl(4,80%,50%)"></span>Negativo</div>
-        <div id="ch-delta" style="height:${Math.max(280,n*28)}px;width:100%"></div>
-      </div>
     </div>
   </div>`;
 }
@@ -877,81 +890,105 @@ function rPriority(items,type,gcFn){
 
 function noData(msg){return`<div style="text-align:center;padding:3rem;color:var(--mfg);font-size:.85rem">${msg}</div>`}
 
-/* ─── RECHARTS — FIXED ─── */
+/* ─── CHARTS — SVG PURO ─── */
 function mountCharts(attempt){
   attempt=attempt||0;
-  // Wait for Recharts global
-  if(typeof Recharts==='undefined'){setTimeout(()=>mountCharts(attempt+1),150);return}
-  if(typeof React==='undefined'||typeof ReactDOM==='undefined'){setTimeout(()=>mountCharts(attempt+1),150);return}
-  const{BarChart,Bar,XAxis,YAxis,CartesianGrid,Tooltip,ResponsiveContainer,ReferenceLine,Cell,LabelList}=Recharts;
 
-  function mkBar(id,data,dk,refX,ttLabel,lblFmt){
+  function mkBarSVG(id,data,dk,refX,ttLabel,lblFmt){
     const el=document.getElementById(id);
-    if(!el||!data||!data.length){return}
-    // If element has no width yet, retry
-    if(el.offsetWidth===0&&attempt<10){setTimeout(()=>mountCharts(attempt+1),120);return}
-    // Clear any previous render
-    try{ReactDOM.unmountComponentAtNode(el)}catch(e){}
+    if(!el||!data||!data.length)return;
+    const W=el.offsetWidth||el.parentElement?.offsetWidth||600;
+    if(W<50&&attempt<12){setTimeout(()=>mountCharts(attempt+1),150);return}
 
-    const LblComp=props=>{
-      const{x,y,width,height,index}=props;
-      const e=data[index];if(!e)return null;
-      const isPos=(e[dk]||0)>=0;
-      return React.createElement('text',{
-        x:isPos?x+width+5:x-3,
-        y:y+height/2,
-        fill:'var(--ctxt)',fontSize:10,fontWeight:700,
-        textAnchor:isPos?'start':'end',
-        dominantBaseline:'middle'
-      },lblFmt(e));
-    };
+    const barH=22,gap=6,padL=180,padR=80,padT=16,padB=32;
+    const n=data.length;
+    const innerH=n*(barH+gap)-gap;
+    const svgH=innerH+padT+padB;
+    const innerW=W-padL-padR;
 
-    const ttStyle={background:'var(--card)',border:'1px solid var(--brd)',borderRadius:8,color:'var(--fg)',fontSize:11,fontWeight:600,padding:'8px 12px',boxShadow:'0 8px 26px rgba(0,0,0,.16)'};
+    // value range
+    const vals=data.map(d=>d[dk]||0);
+    const minV=Math.min(...vals,refX!==null?refX:Infinity);
+    const maxV=Math.max(...vals,refX!==null?refX:-Infinity,0.001);
+    const span=maxV-Math.min(minV,0)||1;
+    const zeroX=padL+innerW*(-Math.min(minV,0)/span);
 
-    ReactDOM.render(
-      React.createElement(ResponsiveContainer,{width:'100%',height:'100%'},
-        React.createElement(BarChart,{data,layout:'vertical',margin:{top:4,right:70,left:8,bottom:4}},
-          React.createElement(CartesianGrid,{strokeDasharray:'3 3',horizontal:false,stroke:'var(--cgrid)',opacity:.45}),
-          React.createElement(XAxis,{type:'number',tick:{fontSize:10,fill:'var(--ctxt)'},axisLine:{stroke:'var(--cgrid)'},tickLine:{stroke:'var(--cgrid)'}}),
-          React.createElement(YAxis,{type:'category',dataKey:'name',width:148,tick:{fontSize:10,fill:'var(--ctxt)',fontWeight:500},axisLine:false,tickLine:false}),
-          React.createElement(Tooltip,{formatter:(v)=>[ttLabel(v),dk],contentStyle:ttStyle}),
-          refX!==null&&React.createElement(ReferenceLine,{x:refX,stroke:refX===0?'var(--mfg)':'hsl(142,62%,40%)',strokeDasharray:refX===0?undefined:'4 3',strokeWidth:1.5,...(refX===100?{label:{value:'Meta',position:'top',fontSize:9,fill:'hsl(142,62%,40%)',fontWeight:700}}:{})}),
-          React.createElement(Bar,{dataKey:dk,radius:[0,3,3,0],barSize:16,isAnimationActive:false},
-            ...data.map((e,i)=>React.createElement(Cell,{key:`c-${i}`,fill:e.fill||'var(--p)'})),
-            React.createElement(LabelList,{content:LblComp})
-          )
-        )
-      ),el
-    );
-    // Trigger resize so ResponsiveContainer recalculates dimensions
-    setTimeout(()=>window.dispatchEvent(new Event('resize')),50);
+    // axis ticks
+    const ticks=5;
+    const tickVals=Array.from({length:ticks+1},(_,i)=>Math.min(minV,0)+span*(i/ticks));
+
+    function xOf(v){return padL+innerW*((v-Math.min(minV,0))/span);}
+    function fmt(v){
+      if(dk==='cobProj')return v.toFixed(1)+'%';
+      if(Math.abs(v)>=1e6)return(v/1e6).toFixed(1)+'M';
+      if(Math.abs(v)>=1000)return(v/1000).toFixed(1)+'k';
+      return Number.isInteger(v)?v:v.toFixed(2);
+    }
+
+    let bars='',labels='',names='';
+    data.forEach((d,i)=>{
+      const v=d[dk]||0;
+      const y=padT+i*(barH+gap);
+      const x0=Math.min(xOf(0),xOf(v));
+      const bw=Math.abs(xOf(v)-xOf(0));
+      const fill=d.fill||'hsl(224,72%,50%)';
+      const lx=v>=0?xOf(v)+5:xOf(v)-5;
+      const ta=v>=0?'start':'end';
+      const name=(d.name||'').length>26?(d.name||'').slice(0,24)+'…':(d.name||'');
+      bars+=`<rect x="${x0.toFixed(1)}" y="${y}" width="${Math.max(bw,1).toFixed(1)}" height="${barH}" rx="3" fill="${fill}" opacity="0.9"/>`;
+      labels+=`<text x="${lx.toFixed(1)}" y="${(y+barH/2).toFixed(1)}" dy=".35em" font-size="10" font-weight="700" fill="var(--ctxt)" text-anchor="${ta}">${fmt(v)}</text>`;
+      names+=`<text x="${(padL-8).toFixed(1)}" y="${(y+barH/2).toFixed(1)}" dy=".35em" font-size="10" font-weight="500" fill="var(--ctxt)" text-anchor="end">${name}</text>`;
+    });
+
+    let gridLines='',tickLabels='';
+    tickVals.forEach(tv=>{
+      const tx=xOf(tv).toFixed(1);
+      gridLines+=`<line x1="${tx}" y1="${padT}" x2="${tx}" y2="${padT+innerH}" stroke="var(--cgrid)" stroke-width="1" opacity="0.5"/>`;
+      tickLabels+=`<text x="${tx}" y="${padT+innerH+14}" font-size="9" fill="var(--ctxt)" text-anchor="middle">${fmt(tv)}</text>`;
+    });
+
+    let refLine='';
+    if(refX!==null){
+      const rx=xOf(refX).toFixed(1);
+      const isZero=refX===0;
+      refLine=`<line x1="${rx}" y1="${padT-4}" x2="${rx}" y2="${padT+innerH}" stroke="${isZero?'var(--mfg)':'hsl(142,62%,40%)'}" stroke-width="${isZero?1:1.5}" stroke-dasharray="${isZero?'':'5 3'}"/>`;
+      if(!isZero)refLine+=`<text x="${rx}" y="${padT-7}" font-size="9" font-weight="700" fill="hsl(142,62%,40%)" text-anchor="middle">Meta</text>`;
+    }
+
+    el.innerHTML=`<svg width="100%" height="${svgH}" viewBox="0 0 ${W} ${svgH}" xmlns="http://www.w3.org/2000/svg" style="display:block">
+      ${gridLines}${refLine}${bars}${names}${labels}
+      <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+innerH}" stroke="var(--cgrid)" stroke-width="1"/>
+      <line x1="${padL}" y1="${padT+innerH}" x2="${W-padR+8}" y2="${padT+innerH}" stroke="var(--cgrid)" stroke-width="1"/>
+      ${tickLabels}
+    </svg>`;
   }
 
   const isR=tab==='reais';
 
-  /* ── PRODUTO CHARTS ── */
-  if(section==='produto'&&dashData.famData&&famView==='produto'){
+  /* ── PRODUTO / COBERTURA / DELTA CHARTS ── */
+  if(section==='produto'&&dashData.famData){
     const rows=isR?dashData.famData.valorRows:dashData.famData.unidadesRows;
-    const sorted=[...rows].sort((a,b)=>a.cobProjArred-b.cobProjArred);
 
-    // Cobertura
-    const cobData=sorted.map(r=>({
-      name:r.produto.replace(/ MF_$/,'').replace(/ HYQ$/,'').replace(/_$/,''),
-      cobProj:parseFloat((r.cobProjArred*100).toFixed(1)),
-      fill:r.cobProjArred>=1?'hsl(142,62%,40%)':r.cobProjArred>=.7?'hsl(38,88%,48%)':'hsl(4,80%,52%)',
-    }));
-    mkBar('ch-cob',cobData,'cobProj',100,v=>`${v.toFixed(1)}%`,e=>`${e.cobProj.toFixed(1)}%`);
+    if(famView==='cobertura'||famView==='produto'){
+      const sorted=[...rows].sort((a,b)=>a.cobProjArred-b.cobProjArred);
+      const cobData=sorted.map(r=>({
+        name:r.produto.replace(/ MF_?$/,'').replace(/ HYQ$/,'').replace(/_$/,''),
+        cobProj:parseFloat((r.cobProjArred*100).toFixed(1)),
+        fill:r.cobProjArred>=1?'hsl(142,62%,40%)':r.cobProjArred>=.7?'hsl(38,88%,48%)':'hsl(4,80%,52%)',
+      }));
+      mkBarSVG('ch-cob',cobData,'cobProj',100,v=>`${v.toFixed(1)}%`,e=>`${e.cobProj.toFixed(1)}%`);
+    }
 
-    // Delta
-    const dSorted=[...rows].sort((a,b)=>a.deltaCota-b.deltaCota);
-    const mA=Math.max(...dSorted.map(r=>Math.abs(r.deltaCota)),.001);
-    const fmtD=v=>mA<=5?v.toFixed(2):Math.abs(v)>=1e6?`${(v/1e6).toFixed(1)}M`:Math.abs(v)>=1000?`${(v/1000).toFixed(1)}k`:v.toFixed(0);
-    const deltaData=dSorted.map(r=>({
-      name:r.produto.replace(/ MF_$/,'').replace(/ HYQ$/,'').replace(/_$/,''),
-      delta:mA<=5?parseFloat(r.deltaCota.toFixed(2)):Math.round(r.deltaCota),
-      fill:r.deltaCota>=0?'hsl(142,62%,40%)':'hsl(4,80%,52%)',
-    }));
-    mkBar('ch-delta',deltaData,'delta',0,v=>fmtD(v),e=>fmtD(e.delta));
+    if(famView==='delta'||famView==='produto'){
+      const dSorted=[...rows].sort((a,b)=>a.deltaCota-b.deltaCota);
+      const mA=Math.max(...dSorted.map(r=>Math.abs(r.deltaCota)),.001);
+      const deltaData=dSorted.map(r=>({
+        name:r.produto.replace(/ MF_?$/,'').replace(/ HYQ$/,'').replace(/_$/,''),
+        delta:mA<=5?parseFloat(r.deltaCota.toFixed(2)):Math.round(r.deltaCota),
+        fill:r.deltaCota>=0?'hsl(142,62%,40%)':'hsl(4,80%,52%)',
+      }));
+      mkBarSVG('ch-delta',deltaData,'delta',0,null,null);
+    }
   }
 
   /* ── REP CHARTS ── */
@@ -960,22 +997,18 @@ function mountCharts(attempt){
     const gc=r=>isR?r.cobProjArred:(r.uni?.cobProjArred??r.cobProjArred);
     const gd=r=>isR?r.deltaCota:(r.uni?.deltaCota??r.deltaCota);
 
-    // Cobertura
     const cobData=[...reps].sort((a,b)=>gc(a)-gc(b)).map(r=>{
       const c=gc(r);
       return{name:r.nome,cobProj:parseFloat((c*100).toFixed(1)),fill:c>=1?'hsl(142,62%,40%)':c>=.7?'hsl(38,88%,48%)':'hsl(4,80%,52%)'};
     });
-    mkBar('rep-cob',cobData,'cobProj',100,v=>`${v.toFixed(1)}%`,e=>`${e.cobProj.toFixed(1)}%`);
+    mkBarSVG('rep-cob',cobData,'cobProj',100,v=>`${v.toFixed(1)}%`,null);
 
-    // Delta
     const dSorted=[...reps].sort((a,b)=>gd(a)-gd(b));
-    const mA=Math.max(...dSorted.map(r=>Math.abs(gd(r))),.001);
-    const fmtD=v=>Math.abs(v)>=1e6?`${(v/1e6).toFixed(1)}M`:Math.abs(v)>=1000?`${(v/1000).toFixed(1)}k`:v.toFixed(0);
     const deltaData=dSorted.map(r=>{
       const d=gd(r);
       return{name:r.nome,delta:Math.round(d),fill:d>=0?'hsl(142,62%,40%)':'hsl(4,80%,52%)'};
     });
-    mkBar('rep-delta',deltaData,'delta',0,v=>fmtD(v),e=>fmtD(e.delta));
+    mkBarSVG('rep-delta',deltaData,'delta',0,null,null);
   }
 }
 
