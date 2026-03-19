@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Análise 360° — Dashboard Comercial</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <!-- SheetJS -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Recharts via React+UMD -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+  <!-- html2canvas + jsPDF for export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Lucide icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <style>
+    /* ── CSS Variables ── */
+    :root {
+      --background: hsl(0,0%,98%);
+      --foreground: hsl(220,20%,14%);
+      --card: hsl(0,0%,100%);
+      --card-foreground: hsl(220,20%,14%);
+      --primary: hsl(220,20%,14%);
+      --primary-foreground: hsl(0,0%,98%);
+      --secondary: hsl(220,10%,93%);
+      --secondary-foreground: hsl(220,15%,30%);
+      --muted: hsl(220,10%,93%);
+      --muted-fg: hsl(215,12%,45%);
+      --accent: hsl(220,10%,90%);
+      --border: hsl(220,10%,88%);
+      --ring: hsl(220,20%,50%);
+      --success: hsl(145,55%,38%);
+      --success-bg: hsl(145,55%,38%,0.1);
+      --warning: hsl(40,80%,45%);
+      --warning-bg: hsl(40,80%,45%,0.1);
+      --danger: hsl(5,70%,48%);
+      --danger-bg: hsl(5,70%,48%,0.1);
+      --surface: hsl(220,10%,95%);
+      --chart-text: hsl(220,15%,35%);
+      --chart-grid: hsl(220,10%,85%);
+      --radius: 0.75rem;
+      --shadow-primary: hsla(220,20%,14%,0.2);
+    }
+    .dark {
+      --background: hsl(220,20%,10%);
+      --foreground: hsl(210,20%,90%);
+      --card: hsl(220,18%,13%);
+      --card-foreground: hsl(210,20%,90%);
+      --primary: hsl(210,20%,90%);
+      --primary-foreground: hsl(220,20%,10%);
+      --secondary: hsl(220,15%,18%);
+      --secondary-foreground: hsl(210,20%,80%);
+      --muted: hsl(220,15%,18%);
+      --muted-fg: hsl(215,12%,55%);
+      --accent: hsl(220,15%,22%);
+      --border: hsl(220,15%,20%);
+      --ring: hsl(210,20%,50%);
+      --success: hsl(145,55%,42%);
+      --success-bg: hsla(145,55%,42%,0.12);
+      --warning: hsl(40,80%,52%);
+      --warning-bg: hsla(40,80%,52%,0.12);
+      --danger: hsl(5,70%,45%);
+      --danger-bg: hsla(5,70%,45%,0.12);
+      --surface: hsl(220,18%,15%);
+      --chart-text: hsl(210,20%,80%);
+      --chart-grid: hsl(220,15%,22%);
+      --shadow-primary: hsla(210,20%,90%,0.15);
+    }
+
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--background);
+      color: var(--foreground);
+      min-height: 100vh;
+      transition: background 0.2s, color 0.2s;
+      -webkit-font-smoothing: antialiased;
+    }
+    .mono { font-family: 'Geist Mono', 'SF Mono', monospace; font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums; }
+
+    /* ── Layout ── */
+    .page { min-height: 100vh; }
+    .max-w { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; }
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .gap-1 { gap: 0.25rem; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-3 { gap: 0.75rem; }
+    .gap-4 { gap: 1rem; }
+    .gap-5 { gap: 1.25rem; }
+    .grid { display: grid; }
+    .g2 { grid-template-columns: repeat(2, 1fr); }
+    .g3 { grid-template-columns: repeat(3, 1fr); }
+    .g4 { grid-template-columns: repeat(4, 1fr); }
+    @media (max-width: 900px) { .g4 { grid-template-columns: repeat(2,1fr); } .g3 { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 640px) { .g2,.g3,.g4 { grid-template-columns: 1fr; } }
+    .hidden { display: none !important; }
+    .overflow-x { overflow-x: auto; }
+
+    /* ── Header ── */
+    header {
+      position: sticky; top: 0; z-index: 50;
+      background: color-mix(in srgb, var(--card) 85%, transparent);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    header .inner { padding: 0.75rem 1.5rem; max-width: 1280px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+    .logo { width: 2.25rem; height: 2.25rem; border-radius: 0.75rem; background: var(--primary); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px var(--shadow-primary); flex-shrink: 0; }
+    .logo svg { width: 1.2rem; height: 1.2rem; color: var(--primary-foreground); }
+    .brand-title { font-size: 0.95rem; font-weight: 700; letter-spacing: -0.01em; display: flex; align-items: center; gap: 0.5rem; }
+    .badge-pro { font-size: 0.6rem; font-weight: 600; background: hsla(220,20%,50%,0.12); color: var(--primary); padding: 0.15rem 0.5rem; border-radius: 999px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .brand-sub { font-size: 0.68rem; color: var(--muted-fg); margin-top: 1px; }
+
+    /* ── Buttons ── */
+    button { cursor: pointer; border: none; background: none; font-family: inherit; transition: all 0.15s; outline: none; }
+    .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.75rem; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 500; transition: all 0.15s; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary { background: var(--primary); color: var(--primary-foreground); }
+    .btn-primary:hover:not(:disabled) { opacity: 0.88; box-shadow: 0 4px 14px var(--shadow-primary); }
+    .btn-secondary { background: var(--secondary); color: var(--foreground); }
+    .btn-secondary:hover { background: var(--accent); }
+    .btn-success-soft { background: var(--success-bg); color: var(--success); }
+    .btn-success-soft:hover:not(:disabled) { background: hsla(145,55%,42%,0.2); }
+    .btn-ghost { color: var(--muted-fg); background: var(--secondary); }
+    .btn-ghost:hover { color: var(--foreground); }
+    .btn-icon { width: 2rem; height: 2rem; padding: 0; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; }
+    .btn-icon:hover { background: var(--secondary); color: var(--foreground); }
+    .btn-icon.danger:hover { color: var(--danger); }
+
+    /* ── View Tabs ── */
+    .view-tabs { display: flex; background: hsla(220,10%,50%,0.1); border-radius: 0.5rem; padding: 0.15rem; gap: 0.15rem; }
+    .view-tab { padding: 0.4rem 0.75rem; border-radius: 0.35rem; font-size: 0.72rem; font-weight: 500; color: var(--muted-fg); transition: all 0.15s; }
+    .view-tab.active { background: var(--card); color: var(--foreground); box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+    .view-tab:hover:not(.active) { color: var(--foreground); }
+
+    /* ── Cards ── */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; transition: box-shadow 0.15s; }
+    .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+
+    /* ── KPI Card ── */
+    .kpi-card { border-radius: var(--radius); padding: 1.25rem; border: 1px solid var(--border); }
+    .kpi-title { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted-fg); }
+    .kpi-value { font-size: 1.6rem; font-weight: 700; margin: 0.5rem 0 0; line-height: 1; }
+    .kpi-sub { font-size: 0.66rem; color: var(--muted-fg); margin-top: 0.4rem; }
+
+    /* ── Auth ── */
+    .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+    .auth-box { width: 100%; max-width: 380px; }
+    .auth-logo { width: 3rem; height: 3rem; border-radius: 0.875rem; background: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
+    .auth-logo svg { width: 1.4rem; height: 1.4rem; color: var(--primary-foreground); }
+    .auth-title { text-align: center; font-size: 1.15rem; font-weight: 600; letter-spacing: -0.01em; }
+    .auth-subtitle { text-align: center; font-size: 0.8rem; color: var(--muted-fg); margin-top: 0.25rem; }
+    .input-wrap { position: relative; }
+    .input-wrap svg { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); width: 1rem; height: 1rem; color: var(--muted-fg); pointer-events: none; }
+    .input-wrap input { width: 100%; padding: 0.625rem 1rem 0.625rem 2.5rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--card); color: var(--foreground); font-size: 0.875rem; font-family: inherit; transition: border-color 0.15s, box-shadow 0.15s; }
+    .input-wrap input:focus { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px hsla(220,20%,50%,0.15); }
+    .btn-auth { width: 100%; padding: 0.625rem; border-radius: 0.5rem; background: var(--foreground); color: var(--background); font-weight: 500; font-size: 0.875rem; font-family: inherit; }
+    .btn-auth:hover:not(:disabled) { opacity: 0.88; }
+    .btn-auth:disabled { opacity: 0.5; }
+    .auth-links { text-align: center; font-size: 0.72rem; color: var(--muted-fg); }
+    .auth-links button { font-size: 0.72rem; color: var(--foreground); font-weight: 500; text-decoration: underline; text-decoration-color: transparent; }
+    .auth-links button:hover { text-decoration-color: currentColor; }
+
+    /* ── Upload Zone ── */
+    .upload-zone { position: relative; cursor: pointer; border: 2px dashed var(--border); border-radius: var(--radius); padding: 2.5rem 1.5rem; text-align: center; transition: all 0.2s; background: var(--card); }
+    .upload-zone:hover { border-color: hsla(220,20%,50%,0.4); background: hsla(220,20%,14%,0.02); }
+    .upload-zone.done { border-color: hsla(145,55%,42%,0.5); background: var(--success-bg); }
+    .upload-zone .step-badge { position: absolute; top: -0.75rem; left: 1rem; padding: 0.1rem 0.75rem; border-radius: 999px; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+    .upload-zone .step-badge.pending { background: var(--primary); color: var(--primary-foreground); }
+    .upload-zone .step-badge.done { background: var(--success); color: #fff; }
+    .upload-icon-wrap { width: 3.5rem; height: 3.5rem; border-radius: 1rem; background: var(--secondary); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; }
+    .upload-zone:hover .upload-icon-wrap { background: hsla(220,20%,14%,0.1); }
+    .dark .upload-zone:hover .upload-icon-wrap { background: hsla(210,20%,90%,0.1); }
+    .upload-label { font-size: 0.875rem; font-weight: 600; }
+    .upload-desc { font-size: 0.72rem; color: var(--muted-fg); margin-top: 0.25rem; }
+    .upload-hint { font-size: 0.68rem; color: hsla(215,12%,45%,0.6); margin-top: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.3rem; }
+    .upload-filename { font-size: 0.72rem; color: var(--success); margin-top: 0.25rem; font-family: 'Geist Mono', monospace; }
+
+    /* ── Table ── */
+    table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+    th { text-align: left; padding: 0.75rem 1rem; color: var(--muted-fg); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+    th.r, td.r { text-align: right; }
+    th.c, td.c { text-align: center; }
+    td { padding: 0.75rem 1rem; border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent); font-size: 0.72rem; }
+    tr:hover td { background: hsla(220,15%,50%,0.06); }
+    tr:last-child td { border-bottom: none; }
+
+    /* ── Badges ── */
+    .badge { display: inline-flex; align-items: center; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.6rem; font-weight: 700; }
+    .badge-success { background: var(--success-bg); color: var(--success); }
+    .badge-danger { background: var(--danger-bg); color: var(--danger); }
+    .badge-warning { background: var(--warning-bg); color: var(--warning); }
+
+    /* ── Delta Bar ── */
+    .delta-bar-track { width: 100%; height: 0.5rem; background: var(--secondary); border-radius: 4px; overflow: hidden; position: relative; }
+    .delta-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+    .delta-bar-meta { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(127,127,127,0.3); z-index: 2; }
+    .delta-bar-labels { display: flex; justify-content: space-between; margin-top: 0.25rem; }
+    .delta-bar-labels span { font-size: 0.6rem; color: var(--muted-fg); font-family: 'Geist Mono', monospace; }
+
+    /* ── Priority Panel ── */
+    .priority-row { display: flex; align-items: center; justify-content: space-between; padding: 0.625rem 0; border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent); }
+    .priority-row:last-child { border-bottom: none; }
+    .priority-name { font-size: 0.8rem; font-weight: 500; }
+    .priority-fam { font-size: 0.68rem; color: var(--muted-fg); }
+
+    /* ── Toast ── */
+    #toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; pointer-events: none; }
+    .toast { pointer-events: all; background: var(--card); border: 1px solid var(--border); border-radius: 0.625rem; padding: 0.75rem 1rem; font-size: 0.8rem; font-weight: 500; min-width: 240px; max-width: 340px; box-shadow: 0 8px 30px rgba(0,0,0,0.18); display: flex; align-items: center; gap: 0.5rem; animation: slideIn 0.25s ease; }
+    .toast.success { border-color: var(--success); color: var(--success); }
+    .toast.error { border-color: var(--danger); color: var(--danger); }
+    .toast.info { border-color: var(--border); color: var(--foreground); }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes slideOut { to { opacity: 0; transform: translateX(20px); } }
+
+    /* ── Spinner ── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { width: 1rem; height: 1rem; border: 2px solid transparent; border-top-color: currentColor; border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
+
+    /* ── Delta Pulse ── */
+    @keyframes deltaPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+    .pulse { animation: deltaPulse 2s ease-in-out infinite; }
+
+    /* ── Transitions ── */
+    .fade-in { animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Misc ── */
+    .text-success { color: var(--success); }
+    .text-danger { color: var(--danger); }
+    .text-warning { color: var(--warning); }
+    .text-muted { color: var(--muted-fg); }
+    .text-sm { font-size: 0.875rem; }
+    .font-bold { font-weight: 700; }
+    .font-semibold { font-weight: 600; }
+    .divider { width: 1px; height: 1.5rem; background: var(--border); }
+    .loading-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; color: var(--muted-fg); }
+    .surface { background: var(--surface); }
+    details summary { cursor: pointer; list-style: none; }
+    details summary::-webkit-details-marker { display: none; }
+    .details-card { border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 1rem; }
+    .details-card summary { padding: 0.75rem 1.25rem; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-fg); display: flex; align-items: center; gap: 0.5rem; }
+    .details-card summary:hover { color: var(--foreground); }
+    .details-card .content { padding: 0 1.25rem 1rem; font-size: 0.68rem; color: var(--muted-fg); font-family: 'Geist Mono', monospace; line-height: 1.7; }
+    .chart-container { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; }
+    .chart-title { font-size: 1rem; font-weight: 600; margin-bottom: 0.25rem; }
+    .chart-legend { font-size: 0.72rem; color: var(--muted-fg); margin-bottom: 1.25rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+    .dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; }
+    main { max-width: 1280px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .space-y > * + * { margin-top: 1.5rem; }
+    .section-spacing > * + * { margin-top: 1rem; }
+    .tab-toggle { display: flex; gap: 0.5rem; }
+    .tab-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.25rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.875rem; transition: all 0.15s; border: 1px solid var(--border); color: var(--muted-fg); background: var(--card); }
+    .tab-btn:hover { border-color: hsla(220,20%,50%,0.3); }
+    .tab-btn.active-reais { background: var(--primary); color: var(--primary-foreground); border-color: transparent; box-shadow: 0 4px 14px var(--shadow-primary); }
+    .tab-btn.active-unidades { background: var(--success); color: #fff; border-color: transparent; box-shadow: 0 4px 14px hsla(145,55%,38%,0.3); }
+    .tab-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Hero */
+    .hero { text-align: center; margin-bottom: 2.5rem; }
+    .hero-icon { width: 4rem; height: 4rem; border-radius: 1.25rem; background: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; box-shadow: 0 8px 30px var(--shadow-primary); }
+    .hero-icon svg { width: 2rem; height: 2rem; color: var(--primary-foreground); }
+    .hero h2 { font-size: 1.875rem; font-weight: 700; letter-spacing: -0.02em; }
+    .hero p { font-size: 0.875rem; color: var(--muted-fg); margin-top: 0.5rem; max-width: 420px; margin-left: auto; margin-right: auto; }
+
+    /* Process button */
+    .process-btn { width: 100%; padding: 0.875rem; border-radius: 0.75rem; background: var(--primary); color: var(--primary-foreground); font-weight: 600; font-size: 0.875rem; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; }
+    .process-btn:hover:not(:disabled) { box-shadow: 0 6px 20px var(--shadow-primary); opacity: 0.9; }
+    .process-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* Family Card */
+    .family-card { padding: 1.25rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); transition: all 0.2s; }
+    .family-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
+    .family-kpi-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted-fg); }
+    .family-kpi-val { font-size: 1.25rem; font-weight: 700; font-family: 'Geist Mono', monospace; margin-top: 0.25rem; }
+    .family-kpi-sub { font-size: 0.68rem; color: var(--muted-fg); font-family: 'Geist Mono', monospace; }
+    .expand-btn { display: flex; align-items: center; gap: 0.25rem; margin-top: 1rem; font-size: 0.72rem; color: var(--muted-fg); transition: color 0.15s; }
+    .expand-btn:hover { color: var(--foreground); }
+
+    /* Error */
+    .error-msg { font-size: 0.75rem; color: var(--danger); background: var(--danger-bg); border-radius: 0.5rem; padding: 0.5rem 1rem; text-align: center; }
+
+    /* Divider line */
+    hr { border: none; border-top: 1px solid var(--border); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* Reset password */
+    .reset-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+
+    @media (max-width: 1024px) {
+      .desktop-only { display: none !important; }
+    }
+    @media (min-width: 1025px) {
+      .mobile-only { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <div class="loading-page"><div class="spinner"></div>&nbsp; Carregando...</div>
+</div>
+<div id="toast-container"></div>
+
+<script>
+// ── Supabase Client ──
+const SUPABASE_URL = "https://qcayjabwpgowgssmrxnj.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjYXlqYWJ3cGdvd2dzc21yeG5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4MDM2NTgsImV4cCI6MjA4OTM3OTY1OH0.eKTa0310vZSSKb9u558o8Csx93mRbxuscBo5ooWBIrI";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storage: localStorage, persistSession: true, autoRefreshToken: true } });
+
+// ── Theme ──
+let currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+function applyTheme(t) {
+  currentTheme = t;
+  document.documentElement.classList.toggle('dark', t === 'dark');
+  localStorage.setItem('theme', t);
+}
+applyTheme(currentTheme);
+
+// ── Toast ──
+function toast(msg, type = 'info', duration = 3200) {
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+  el.innerHTML = `<span>${icons[type] || ''}</span><span>${msg}</span>`;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.style.animation = 'slideOut 0.25s ease forwards';
+    setTimeout(() => el.remove(), 250);
+  }, duration);
+}
+
+// ── Router ──
+let currentPage = null;
+
+function getPage() {
+  const hash = window.location.hash;
+  const search = window.location.search;
+  if (hash.includes('type=recovery') || search.includes('type=recovery')) return 'reset-password';
+  const path = window.location.pathname.replace(/\/$/, '');
+  // Support GitHub Pages subfolder
+  if (path.endsWith('/login') || hash === '#/login') return 'login';
+  if (path.endsWith('/reset-password') || hash === '#/reset-password') return 'reset-password';
+  return 'index';
+}
+
+function navigate(page) {
+  if (page === 'login') window.location.hash = '#/login';
+  else if (page === 'reset-password') window.location.hash = '#/reset-password';
+  else window.location.hash = '';
+  render();
+}
+
+window.addEventListener('hashchange', () => render());
+window.addEventListener('popstate', () => render());
+
+// ── Auth State ──
+let currentUser = null;
+let authLoading = true;
+
+sb.auth.onAuthStateChange((_event, session) => {
+  currentUser = session?.user ?? null;
+  if (authLoading) { authLoading = false; render(); }
+  else render();
+});
+sb.auth.getSession().then(({ data: { session } }) => {
+  currentUser = session?.user ?? null;
+  authLoading = false;
+  render();
+});
+
+// ── Formatters ──
+function formatCurrency(v) {
+  if (Math.abs(v) >= 1e6) return `R$ ${(v/1e6).toFixed(1)}M`;
+  if (Math.abs(v) >= 1000) return `R$ ${(v/1000).toFixed(1)}k`;
+  return `R$ ${v.toFixed(0)}`;
+}
+function formatNumber(v) { return new Intl.NumberFormat('pt-BR').format(Math.round(v)); }
+function formatPercent(v) { return `${(v * 100).toFixed(1)}%`; }
+
+// ── Excel Parser ──
+function normalizeCol(name) {
+  return String(name).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[_\s.]+/g,' ').trim();
+}
+function findCol(row, names) {
+  const keys = Object.keys(row);
+  const norm = names.map(normalizeCol);
+  for (const n of norm) for (const k of keys) if (normalizeCol(k) === n) return row[k];
+  for (const n of norm) for (const k of keys) if (normalizeCol(k).includes(n)) return row[k];
+  return undefined;
+}
+function toNum(val) {
+  if (val === null || val === undefined || val === '') return 0;
+  if (typeof val === 'number') return isNaN(val) ? 0 : val;
+  let s = String(val).trim().replace(/[¤$€£¥\s]/g,'');
+  const lc = s.lastIndexOf(','), ld = s.lastIndexOf('.');
+  if (lc > ld) s = s.replace(/\./g,'').replace(',','.');
+  else s = s.replace(/,/g,'');
+  const p = parseFloat(s);
+  return isNaN(p) ? 0 : p;
+}
+function extractRow(row, familia, produto) {
+  return {
+    familia, produto,
+    realAA: toNum(findCol(row,['REAL. AA','REAL AA','real aa'])),
+    cota: toNum(findCol(row,['COTA','cota'])),
+    realizado: toNum(findCol(row,['REALIZADO','realizado'])),
+    cobReal: toNum(findCol(row,['COB. REAL','COB REAL','cob real'])),
+    crescAtual: toNum(findCol(row,['CRESC. ATUAL','CRESC ATUAL','cresc atual'])),
+    projArred: toNum(findCol(row,['PROJ. ARRED','PROJ ARRED','proj arred'])),
+    cobProjArred: toNum(findCol(row,['COB. PROJ. ARRED','COB PROJ ARRED','cob proj arred'])),
+    crescProj: toNum(findCol(row,['CRESC. PROJ.','CRESC PROJ','cresc proj'])),
+    repres: toNum(findCol(row,['%Repres.','Repres','repres'])),
+    deltaCota: toNum(findCol(row,['Δ Cota Vs Dem. Proj','Delta Cota','delta cota','Δ Cota','DELTA'])),
+    difRealizadoCota: toNum(findCol(row,['Diferença Realizado x Cota','Diferenca Realizado','dif realizado'])),
+  };
+}
+function parseSheet(wb) {
+  const sheet = wb.Sheets[wb.SheetNames[0]];
+  const raw = XLSX.utils.sheet_to_json(sheet, { defval: 0 });
+  const rows = [];
+  let curFam = '';
+  for (const row of raw) {
+    const firstVal = String(Object.values(row)[0] ?? '');
+    if (firstVal.toLowerCase().includes('filtros aplicados') || firstVal.toLowerCase().includes('meses é')) continue;
+    const familia = String(findCol(row,['FAMILIA','familia']) ?? '').trim();
+    const produto = String(findCol(row,['NM_FAMILIA_PP','nm familia pp','produto']) ?? '').trim();
+    if (familia) curFam = familia;
+    if (!produto || produto === 'Total') {
+      if (produto === 'Total') rows.push(extractRow(row, curFam, '__TOTAL__'));
+      continue;
+    }
+    const ext = extractRow(row, curFam, produto);
+    if (ext.cota === 0) continue;
+    rows.push(ext);
+  }
+  return rows;
+}
+function processExcelFiles(valorBuf, unidadesBuf) {
+  const vWb = XLSX.read(valorBuf, { type: 'array' });
+  const uWb = XLSX.read(unidadesBuf, { type: 'array' });
+  const valorRows = parseSheet(vWb);
+  const unidadesRows = parseSheet(uWb);
+  const valorProducts = valorRows.filter(r => r.produto !== '__TOTAL__');
+  const unidadesProducts = unidadesRows.filter(r => r.produto !== '__TOTAL__');
+  const familias = new Set(valorRows.filter(r => r.produto === '__TOTAL__').map(r => r.familia));
+  const summaries = [];
+  for (const fam of familias) {
+    const vt = valorRows.find(r => r.familia === fam && r.produto === '__TOTAL__');
+    const ut = unidadesRows.find(r => r.familia === fam && r.produto === '__TOTAL__');
+    if (!vt || !ut) continue;
+    const famVal = valorRows.filter(r => r.familia === fam && r.produto !== '__TOTAL__');
+    const famUni = unidadesRows.filter(r => r.familia === fam && r.produto !== '__TOTAL__');
+    const produtos = famVal.map(vp => {
+      const up = famUni.find(u => u.produto === vp.produto) || { ...vp, realAA:0,cota:0,realizado:0,cobReal:0,crescAtual:0,projArred:0,cobProjArred:0,crescProj:0,repres:0,deltaCota:0,difRealizadoCota:0 };
+      return { nome: vp.produto.replace(/_$/,'').replace(/MF_$/,'').replace(/ HYQ$/,'').trim(), valor: vp, unidades: up, status: vp.deltaCota >= 0 ? 'blindar' : 'atuar' };
+    });
+    summaries.push({
+      familia: fam,
+      valor: { realAA:vt.realAA,cota:vt.cota,realizado:vt.realizado,cobReal:vt.cobReal,projArred:vt.projArred,cobProjArred:vt.cobProjArred,deltaCota:vt.deltaCota,difRealizadoCota:vt.difRealizadoCota },
+      unidades: { realAA:ut.realAA,cota:ut.cota,realizado:ut.realizado,cobReal:ut.cobReal,projArred:ut.projArred,cobProjArred:ut.cobProjArred,deltaCota:ut.deltaCota,difRealizadoCota:ut.difRealizadoCota },
+      produtos,
+      status: vt.deltaCota >= 0 ? 'blindar' : 'atuar',
+    });
+  }
+  summaries.sort((a,b) => {
+    if (a.status === 'atuar' && b.status === 'blindar') return -1;
+    if (a.status === 'blindar' && b.status === 'atuar') return 1;
+    return a.valor.deltaCota - b.valor.deltaCota;
+  });
+  const totalValor = { cota:0,realizado:0,projArred:0,deltaCota:0,cobProjArred:0 };
+  const totalUnidades = { cota:0,realizado:0,projArred:0,deltaCota:0,cobProjArred:0 };
+  summaries.forEach(s => {
+    totalValor.cota += s.valor.cota; totalValor.realizado += s.valor.realizado; totalValor.projArred += s.valor.projArred; totalValor.deltaCota += s.valor.deltaCota;
+    totalUnidades.cota += s.unidades.cota; totalUnidades.realizado += s.unidades.realizado; totalUnidades.projArred += s.unidades.projArred; totalUnidades.deltaCota += s.unidades.deltaCota;
+  });
+  totalValor.cobProjArred = totalValor.cota > 0 ? totalValor.projArred / totalValor.cota : 0;
+  totalUnidades.cobProjArred = totalUnidades.cota > 0 ? totalUnidades.projArred / totalUnidades.cota : 0;
+  return { familias: summaries, valorRows: valorProducts, unidadesRows: unidadesProducts, totalValor, totalUnidades };
+}
+
+// ── Analysis Storage ──
+async function saveAnalysis(data) {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) throw new Error('Não autenticado');
+  await sb.from('saved_analyses').delete().eq('user_id', user.id);
+  const { error } = await sb.from('saved_analyses').insert({ data, user_id: user.id });
+  if (error) throw error;
+}
+async function loadAnalysis() {
+  const { data, error } = await sb.from('saved_analyses').select('data').order('created_at', { ascending: false }).limit(1).single();
+  if (error || !data) return null;
+  return data.data;
+}
+
+// ── Lucide Icons helper ──
+function icon(name, size = 16, cls = '') {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${cls}" style="flex-shrink:0">${ICONS[name] || ''}</svg>`;
+}
+const ICONS = {
+  'bar-chart-3': '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+  'sun': '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>',
+  'moon': '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
+  'log-out': '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+  'save': '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',
+  'download': '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  'image': '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+  'target': '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  'mail': '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>',
+  'lock': '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  'user': '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  'upload': '<polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>',
+  'check-circle': '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+  'file-spreadsheet': '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><polyline points="10 9 9 9 8 9"/>',
+  'dollar-sign': '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+  'package': '<line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
+  'arrow-right': '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
+  'chevron-down': '<polyline points="6 9 12 15 18 9"/>',
+  'alert-triangle': '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  'shield-check': '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>',
+};
+
+// ── App State ──
+let dashData = null;
+let activeTab = 'reais';
+let viewMode = 'familia';
+let expandedFamilies = new Set();
+let loadingProcess = false;
+let savingAnalysis = false;
+let valorFile = null;
+let unidadesFile = null;
+let processError = null;
+
+const VIEW_LABELS = { familia:'📂 Por Família', produto:'📋 Por Produto', cobertura:'📊 Cobertura', delta:'📈 Delta' };
+
+// ── Render Engine ──
+function render() {
+  const app = document.getElementById('app');
+  if (authLoading) { app.innerHTML = '<div class="loading-page"><div class="spinner"></div>&nbsp; Carregando...</div>'; return; }
+  const page = getPage();
+  if (page === 'reset-password') { renderResetPassword(); return; }
+  if (!currentUser) { renderAuth(); return; }
+  renderDashboard();
+}
+
+// ── Auth Page ──
+let authMode = 'login';
+let authLoading2 = false;
+
+function renderAuth() {
+  const titles = { login:'Entre na sua conta', signup:'Crie sua conta', forgot:'Recuperar Senha' };
+  const btns = { login:'Entrar', signup:'Criar Conta', forgot:'Enviar Email' };
+  document.getElementById('app').innerHTML = `
+  <div class="auth-page fade-in">
+    <div class="auth-box">
+      <div style="margin-bottom:2rem">
+        <div class="auth-logo">${icon('target',22)}</div>
+        <div class="auth-title">Dashboard Comercial</div>
+        <div class="auth-subtitle">${titles[authMode]}</div>
+      </div>
+      <div class="section-spacing">
+        ${authMode === 'signup' ? `<div class="input-wrap">${icon('user',16)}<input id="inp-name" type="text" placeholder="Seu nome" /></div>` : ''}
+        <div class="input-wrap">${icon('mail',16)}<input id="inp-email" type="email" placeholder="Email" required /></div>
+        ${authMode !== 'forgot' ? `<div class="input-wrap">${icon('lock',16)}<input id="inp-pass" type="password" placeholder="Senha (mín. 6 caracteres)" minlength="6" /></div>` : ''}
+        <button class="btn-auth" id="btn-auth-submit" onclick="submitAuth()">${btns[authMode]}</button>
+      </div>
+      <div class="auth-links" style="margin-top:1.5rem; display:flex;flex-direction:column;gap:0.5rem">
+        ${authMode === 'login' ? `<div><button onclick="setAuthMode('forgot')">Esqueci minha senha</button></div><div>Não tem conta? <button onclick="setAuthMode('signup')">Criar conta</button></div>` : ''}
+        ${authMode === 'signup' ? `<div>Já tem conta? <button onclick="setAuthMode('login')">Fazer login</button></div>` : ''}
+        ${authMode === 'forgot' ? `<div><button onclick="setAuthMode('login')">Voltar ao login</button></div>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function setAuthMode(m) { authMode = m; render(); }
+
+async function submitAuth() {
+  const email = document.getElementById('inp-email')?.value?.trim();
+  const pass = document.getElementById('inp-pass')?.value;
+  const name = document.getElementById('inp-name')?.value?.trim();
+  const btn = document.getElementById('btn-auth-submit');
+  if (!btn) return;
+  btn.disabled = true;
+  btn.textContent = 'Aguarde...';
+  try {
+    if (authMode === 'forgot') {
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/index.html#/reset-password' });
+      if (error) throw error;
+      toast('Email de recuperação enviado!', 'success');
+      setAuthMode('login');
+    } else if (authMode === 'login') {
+      const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+      if (error) throw error;
+      toast('Login realizado com sucesso!', 'success');
+    } else {
+      const { error } = await sb.auth.signUp({ email, password: pass, options: { data: { name } } });
+      if (error) throw error;
+      toast('Conta criada! Verifique seu email.', 'success');
+    }
+  } catch (err) {
+    toast(err.message || 'Erro na autenticação', 'error');
+    btn.disabled = false;
+    btn.textContent = authMode === 'forgot' ? 'Enviar Email' : authMode === 'login' ? 'Entrar' : 'Criar Conta';
+  }
+}
+
+// ── Reset Password Page ──
+function renderResetPassword() {
+  const isRecovery = window.location.hash.includes('type=recovery') || window.location.search.includes('type=recovery');
+  if (!isRecovery) {
+    document.getElementById('app').innerHTML = `
+    <div class="reset-page fade-in">
+      <div style="text-align:center;max-width:360px">
+        <div class="auth-logo">${icon('target',22)}</div>
+        <h2 style="font-size:1.15rem;font-weight:600;margin-bottom:0.5rem">Link inválido</h2>
+        <p style="font-size:0.8rem;color:var(--muted-fg);margin-bottom:1.5rem">Este link de recuperação é inválido ou expirou.</p>
+        <button class="btn btn-secondary" onclick="navigate('login')">Voltar ao login</button>
+      </div>
+    </div>`;
+    return;
+  }
+  document.getElementById('app').innerHTML = `
+  <div class="reset-page fade-in">
+    <div class="auth-box">
+      <div style="margin-bottom:2rem">
+        <div class="auth-logo">${icon('target',22)}</div>
+        <div class="auth-title">Nova Senha</div>
+        <div class="auth-subtitle">Digite sua nova senha abaixo</div>
+      </div>
+      <div class="section-spacing">
+        <div class="input-wrap">${icon('lock',16)}<input id="rp-pass" type="password" placeholder="Nova senha" minlength="6" /></div>
+        <div class="input-wrap">${icon('lock',16)}<input id="rp-confirm" type="password" placeholder="Confirmar nova senha" minlength="6" /></div>
+        <button class="btn-auth" onclick="submitReset()">Atualizar Senha</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function submitReset() {
+  const pass = document.getElementById('rp-pass').value;
+  const conf = document.getElementById('rp-confirm').value;
+  if (pass !== conf) { toast('As senhas não coincidem', 'error'); return; }
+  if (pass.length < 6) { toast('Mínimo 6 caracteres', 'error'); return; }
+  try {
+    const { error } = await sb.auth.updateUser({ password: pass });
+    if (error) throw error;
+    toast('Senha atualizada!', 'success');
+    setTimeout(() => navigate('index'), 1500);
+  } catch (err) { toast(err.message || 'Erro', 'error'); }
+}
+
+// ── Dashboard ──
+function renderDashboard() {
+  const app = document.getElementById('app');
+  if (!dashData) {
+    app.innerHTML = renderUploadPage();
+    attachUploadListeners();
+  } else {
+    app.innerHTML = renderDashboardPage();
+    attachDashboardListeners();
+  }
+}
+
+function renderUploadPage() {
+  return `
+  <div class="page">
+    ${renderHeader(false)}
+    <main>
+      <div style="max-width:640px;margin:0 auto" class="fade-in">
+        <div class="hero">
+          <div class="hero-icon">${icon('bar-chart-3',30)}</div>
+          <h2>Análise 360°</h2>
+          <p>Suba seus dois arquivos Excel para gerar uma análise completa de cobertura, delta e projeção de cota.</p>
+        </div>
+        <div class="grid g2 gap-5" style="margin-bottom:2rem">
+          ${renderUploadZone(1, 'Excel de Valor (R$)', 'Dados financeiros por produto', valorFile, 'valor')}
+          ${renderUploadZone(2, 'Excel de Unidades', 'Dados de unidades por produto', unidadesFile, 'unidades')}
+        </div>
+        <details class="details-card" style="margin-bottom:1.5rem">
+          <summary>${icon('file-spreadsheet',13)} Ver formato esperado das colunas</summary>
+          <div class="content">FAMILIA · NM_FAMILIA_PP · REAL. AA · COTA · REALIZADO · COB. REAL · CRESC. ATUAL · PROJ. ARRED · COB. PROJ. ARRED · CRESC. PROJ. · %Repres. · Δ Cota Vs Dem. Proj · Diferença Realizado x Cota</div>
+        </details>
+        ${processError ? `<div class="error-msg" style="margin-bottom:1rem">${processError}</div>` : ''}
+        <button class="process-btn" id="btn-process" ${!valorFile || !unidadesFile || loadingProcess ? 'disabled' : ''} onclick="processFiles()">
+          ${loadingProcess ? `<div class="spinner"></div>Processando...` : `Gerar Análise 360° ${icon('arrow-right',16)}`}
+        </button>
+        ${currentUser ? `<p style="text-align:center;font-size:0.68rem;color:hsla(215,12%,45%,0.5);margin-top:1.5rem">Logado como ${currentUser.email}</p>` : ''}
+      </div>
+    </main>
+  </div>`;
+}
+
+function renderUploadZone(step, label, desc, file, id) {
+  return `
+  <div class="upload-zone ${file ? 'done' : ''}" id="zone-${id}" onclick="document.getElementById('file-${id}').click()" 
+    ondrop="handleDrop(event,'${id}')" ondragover="event.preventDefault()">
+    <input type="file" id="file-${id}" accept=".xlsx,.xls" style="display:none" onchange="handleFileChange(event,'${id}')" />
+    <span class="step-badge ${file ? 'done' : 'pending'}">Passo ${step}</span>
+    ${file ? `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.75rem">
+        <div>${icon('check-circle',40,'text-success')}</div>
+        <div><div class="upload-label">${label}</div><div class="upload-filename">✓ ${file.name}</div></div>
+      </div>` : `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.75rem">
+        <div class="upload-icon-wrap">${icon(id === 'valor' ? 'dollar-sign' : 'package', 28)}</div>
+        <div><div class="upload-label">${label}</div><div class="upload-desc">${desc}</div></div>
+        <div class="upload-hint">${icon('upload',12)} Clique ou arraste o arquivo aqui</div>
+      </div>`}
+  </div>`;
+}
+
+function handleDrop(e, id) {
+  e.preventDefault();
+  const f = e.dataTransfer.files[0];
+  if (f && (f.name.endsWith('.xlsx') || f.name.endsWith('.xls'))) {
+    if (id === 'valor') valorFile = f; else unidadesFile = f;
+    render();
+  }
+}
+function handleFileChange(e, id) {
+  const f = e.target.files?.[0];
+  if (f) { if (id === 'valor') valorFile = f; else unidadesFile = f; render(); }
+}
+
+function attachUploadListeners() {}
+
+async function processFiles() {
+  if (!valorFile || !unidadesFile) return;
+  loadingProcess = true; processError = null; render();
+  try {
+    const [vBuf, uBuf] = await Promise.all([valorFile.arrayBuffer(), unidadesFile.arrayBuffer()]);
+    dashData = processExcelFiles(vBuf, uBuf);
+    try { await saveAnalysis(dashData); toast('Análise salva no banco de dados!', 'success'); }
+    catch (e) { console.error(e); toast('Análise processada, mas erro ao salvar.', 'error'); }
+  } catch (e) {
+    processError = 'Erro ao processar os arquivos. Verifique se estão no formato correto.';
+    console.error(e); toast('Erro ao processar arquivos', 'error');
+  } finally { loadingProcess = false; render(); }
+}
+
+// ── Dashboard Page ──
+function renderDashboardPage() {
+  const rows = activeTab === 'reais' ? dashData.valorRows : dashData.unidadesRows;
+  const totals = activeTab === 'reais' ? dashData.totalValor : dashData.totalUnidades;
+  const fmt = v => activeTab === 'reais' ? formatCurrency(v) : formatNumber(v);
+  const urgentes = rows.filter(r => r.cobProjArred < 0.7).length;
+  const batendo = rows.filter(r => r.cobProjArred >= 1.0).length;
+
+  return `
+  <div class="page" id="dashboard-page">
+    ${renderHeader(true)}
+    <main class="space-y fade-in">
+      <!-- Tab + View Controls -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem">
+        <div class="tab-toggle">
+          <button class="tab-btn ${activeTab === 'reais' ? 'active-reais' : ''}" onclick="setTab('reais')">${icon('dollar-sign',16)} Reais</button>
+          <button class="tab-btn ${activeTab === 'unidades' ? 'active-unidades' : ''}" ${dashData.unidadesRows.length === 0 ? 'disabled' : ''} onclick="setTab('unidades')">${icon('package',16)} Unidades</button>
+        </div>
+        <div class="view-tabs mobile-only">
+          ${Object.entries(VIEW_LABELS).map(([k,l]) => `<button class="view-tab ${viewMode===k?'active':''}" onclick="setView('${k}')">${l.split(' ')[0]}</button>`).join('')}
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="grid g4 gap-3">
+        ${kpiCard('Cota Total', fmt(totals.cota), 'Meta do período', 'neutral')}
+        ${kpiCard('Realizado', fmt(totals.realizado), `${totals.cota > 0 ? ((totals.realizado/totals.cota)*100).toFixed(1) : '0'}% da cota`, totals.realizado >= totals.cota ? 'success' : 'warning')}
+        ${kpiCard('Projeção', fmt(totals.projArred), `Cob. Proj. ${formatPercent(totals.cobProjArred)}`, totals.cobProjArred >= 1 ? 'success' : 'warning')}
+        ${kpiCard('Alertas', `${urgentes} urgentes`, `${batendo} produtos batendo meta`, urgentes > 0 ? 'danger' : 'success')}
+      </div>
+
+      <!-- Content -->
+      <div id="view-content">
+        ${renderViewContent(rows)}
+      </div>
+
+      <!-- Priority Panel -->
+      ${renderPriorityPanel(rows)}
+    </main>
+  </div>`;
+}
+
+function kpiCard(title, value, subtitle, status) {
+  const colors = {
+    success: `border-color:hsla(145,55%,42%,0.2);background:hsla(145,55%,42%,0.05);`,
+    warning: `border-color:hsla(40,80%,45%,0.2);background:hsla(40,80%,45%,0.05);`,
+    danger: `border-color:hsla(5,70%,48%,0.2);background:hsla(5,70%,48%,0.05);`,
+    neutral: '',
+  };
+  const textColor = { success:'var(--success)', warning:'var(--warning)', danger:'var(--danger)', neutral:'var(--foreground)' };
+  const pulse = status === 'danger' ? 'pulse' : '';
+  return `
+  <div class="kpi-card" style="${colors[status]}">
+    <div class="kpi-title">${title}</div>
+    <div class="kpi-value mono ${pulse}" style="color:${textColor[status]}">${value}</div>
+    ${subtitle ? `<div class="kpi-sub mono">${subtitle}</div>` : ''}
+  </div>`;
+}
+
+function renderViewContent(rows) {
+  if (viewMode === 'familia') return renderFamilySummary(rows);
+  if (viewMode === 'produto') return renderProductTable(rows);
+  if (viewMode === 'cobertura') return renderCoberturaChart(rows);
+  if (viewMode === 'delta') return renderDeltaChart(rows);
+  return '';
+}
+
+// ── Family Summary View ──
+function renderFamilySummary(rows) {
+  const familias = [...new Set(rows.map(r => r.familia))];
+  const fmt = v => activeTab === 'reais' ? formatCurrency(v) : formatNumber(v);
+  const FCOLORS = { 'FOCO 1':'hsl(239,84%,67%)','FOCO 2':'hsl(38,92%,50%)','FOCO 3':'hsl(160,84%,39%)','DEMAIS PRODUTOS':'hsl(215,16%,57%)','LANCAMENTO':'hsl(330,81%,60%)' };
+  const sColor = c => c >= 1.0 ? 'hsl(145,55%,42%)' : c >= 0.7 ? 'hsl(40,80%,52%)' : 'hsl(5,70%,45%)';
+  const sLabel = c => c >= 1.0 ? '✅ Batendo Meta' : c >= 0.7 ? '⚠️ Atenção' : '🚨 Atuar Urgente';
+  const summary = familias.map(fam => {
+    const items = rows.filter(r => r.familia === fam);
+    const totalCota = items.reduce((s,r) => s+r.cota, 0);
+    const totalReal = items.reduce((s,r) => s+r.realizado, 0);
+    const totalProj = items.reduce((s,r) => s+r.projArred, 0);
+    const cobProj = totalCota > 0 ? totalProj/totalCota : 0;
+    const delta = items.reduce((s,r) => s+r.deltaCota, 0);
+    return { fam, totalCota, totalReal, totalProj, cobProj, delta, count: items.length };
+  });
+  return `<div class="grid g3 gap-4">
+  ${summary.map(({ fam, totalCota, totalReal, totalProj, cobProj, delta, count }) => {
+    const sc = sColor(cobProj);
+    const pctReal = totalCota > 0 ? (totalReal/totalCota)*100 : 0;
+    const pctProj = cobProj * 100;
+    return `<div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+        <span style="font-weight:600">${fam}</span>
+        <span style="padding:0.15rem 0.5rem;border-radius:999px;font-size:0.6rem;font-weight:700;background:${sc}22;color:${sc}">${sLabel(cobProj)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--muted-fg);margin-bottom:0.25rem">
+        <span>Cobertura Projetada</span>
+        <span class="mono font-bold" style="color:${sc}">${pctProj.toFixed(1)}%</span>
+      </div>
+      <div style="width:100%;height:0.5rem;background:var(--secondary);border-radius:4px;overflow:hidden;margin-bottom:0.75rem">
+        <div style="height:100%;border-radius:4px;background:${sc};width:${Math.min(pctProj,100)}%;transition:width 0.5s"></div>
+      </div>
+      <div class="grid g2 gap-2" style="font-size:0.72rem;margin-top:0.5rem">
+        <div style="background:var(--surface);border-radius:0.5rem;padding:0.5rem">
+          <p style="color:var(--muted-fg)">Realizado</p>
+          <p class="mono font-bold">${fmt(totalReal)}</p>
+          <p style="color:${pctReal >= 100 ? 'var(--success)' : 'var(--warning)'}">${pctReal.toFixed(1)}% da cota</p>
+        </div>
+        <div style="background:var(--surface);border-radius:0.5rem;padding:0.5rem">
+          <p style="color:var(--muted-fg)">Projeção</p>
+          <p class="mono font-bold">${fmt(totalProj)}</p>
+          <p style="color:${delta >= 0 ? 'var(--success)' : 'var(--danger)'}">Δ ${delta >= 0 ? '+' : ''}${fmt(delta)}</p>
+        </div>
+      </div>
+      <p style="font-size:0.68rem;color:var(--muted-fg);margin-top:0.5rem">${count} produto${count !== 1 ? 's' : ''} nesta família</p>
+    </div>`;
+  }).join('')}
+  </div>`;
+}
+
+// ── Product Table ──
+function renderProductTable(rows) {
+  const fmt = v => activeTab === 'reais' ? formatCurrency(v) : formatNumber(v);
+  const sorted = [...rows].sort((a,b) => a.cobProjArred - b.cobProjArred);
+  const FCOLORS = { 'FOCO 1':'hsl(239,84%,67%)','FOCO 2':'hsl(38,92%,50%)','FOCO 3':'hsl(160,84%,39%)','DEMAIS PRODUTOS':'hsl(215,16%,57%)','LANCAMENTO':'hsl(330,81%,60%)' };
+  const sc = c => c >= 1 ? 'var(--success)' : c >= 0.7 ? 'var(--warning)' : 'var(--danger)';
+  const sl = c => c >= 1 ? '✅ Batendo' : c >= 0.7 ? '⚠️ Atenção' : '🚨 Atuar';
+  return `<div class="overflow-x card" style="padding:0">
+  <table>
+    <thead><tr>
+      <th>Família</th><th>Produto</th><th class="r">Cota</th><th class="r">Realizado</th>
+      <th class="r">Cob. Real</th><th class="r">Proj.</th><th class="r">Cob. Proj.</th>
+      <th class="r">Δ Cota</th><th class="c">Status</th>
+    </tr></thead>
+    <tbody>
+    ${sorted.map(row => {
+      const fc = FCOLORS[row.familia] || 'hsl(215,16%,57%)';
+      return `<tr>
+        <td><span style="padding:0.1rem 0.5rem;border-radius:999px;font-size:0.6rem;font-weight:600;background:${fc}22;color:${fc}">${row.familia}</span></td>
+        <td style="font-weight:500">${row.produto.replace(/ MF_/,'').replace(/ HYQ/,'').replace(/_$/,'')}</td>
+        <td class="r mono" style="color:var(--muted-fg)">${fmt(row.cota)}</td>
+        <td class="r mono font-semibold">${fmt(row.realizado)}</td>
+        <td class="r mono">${formatPercent(row.cobReal)}</td>
+        <td class="r mono" style="color:var(--muted-fg)">${fmt(row.projArred)}</td>
+        <td class="r mono font-bold" style="color:${sc(row.cobProjArred)}">${formatPercent(row.cobProjArred)}</td>
+        <td class="r"><span class="mono font-semibold" style="color:${row.deltaCota >= 0 ? 'var(--success)' : 'var(--danger)'}">${row.deltaCota >= 0 ? '+' : ''}${fmt(row.deltaCota)}</span></td>
+        <td class="c"><span style="font-size:0.65rem;font-weight:600;color:${sc(row.cobProjArred)}">${sl(row.cobProjArred)}</span></td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+  </table>
+  </div>`;
+}
+
+// ── Charts via Recharts (React) ──
+function renderCoberturaChart(rows) {
+  return `<div class="chart-container" id="cobertura-chart-mount">
+    <h3 class="chart-title">Cobertura Projetada por Produto</h3>
+    <div class="chart-legend">
+      <span class="dot" style="background:hsl(160,60%,52%)"></span>≥100%
+      <span style="margin:0 0.5rem">|</span>
+      <span class="dot" style="background:hsl(45,90%,55%)"></span>70–99%
+      <span style="margin:0 0.5rem">|</span>
+      <span class="dot" style="background:hsl(0,72%,62%)"></span>&lt;70%
+    </div>
+    <div id="cobertura-chart" style="width:100%;height:${Math.max(360,rows.length*32)}px"></div>
+  </div>`;
+}
+
+function renderDeltaChart(rows) {
+  return `<div class="chart-container" id="delta-chart-mount">
+    <h3 class="chart-title">Δ Cota vs Demanda Projetada</h3>
+    <div class="chart-legend">
+      <span class="dot" style="background:hsl(160,60%,52%)"></span>Positivo = supera a cota
+      <span style="margin:0 0.5rem">|</span>
+      <span class="dot" style="background:hsl(0,72%,62%)"></span>Negativo = abaixo da cota
+    </div>
+    <div id="delta-chart" style="width:100%;height:${Math.max(360,rows.length*32)}px"></div>
+  </div>`;
+}
+
+function mountCharts(rows) {
+  if (viewMode === 'cobertura') {
+    const mount = document.getElementById('cobertura-chart');
+    if (!mount) return;
+    const data = [...rows].sort((a,b) => a.cobProjArred - b.cobProjArred).map(r => ({
+      name: r.produto.replace(/ MF_/,'').replace(/ HYQ/,'').replace(/_$/,''),
+      cobProj: parseFloat((r.cobProjArred * 100).toFixed(1)),
+      fill: r.cobProjArred >= 1 ? 'hsl(160,60%,52%)' : r.cobProjArred >= 0.7 ? 'hsl(45,90%,55%)' : 'hsl(0,72%,62%)',
+    }));
+    const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell, LabelList } = Recharts;
+    const chartEl = React.createElement(
+      ResponsiveContainer, { width:'100%', height:'100%' },
+      React.createElement(BarChart, { data, layout:'vertical', margin:{ left:10,right:70 } },
+        React.createElement(CartesianGrid, { strokeDasharray:'3 3', horizontal:false, stroke:'var(--chart-grid)', opacity:0.5 }),
+        React.createElement(XAxis, { type:'number', unit:'%', tick:{ fontSize:11, fill:'var(--chart-text)', fontWeight:500 }, axisLine:{ stroke:'var(--chart-grid)' }, tickLine:{ stroke:'var(--chart-grid)' } }),
+        React.createElement(YAxis, { type:'category', dataKey:'name', tick:{ fontSize:11, fill:'var(--chart-text)', fontWeight:500 }, width:150, axisLine:false, tickLine:false }),
+        React.createElement(Tooltip, { formatter: v => [`${v}%`,'Cob. Projetada'], contentStyle:{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:10, color:'var(--foreground)', fontSize:13, fontWeight:600, padding:'10px 14px' } }),
+        React.createElement(ReferenceLine, { x:100, stroke:'hsl(160,60%,52%)', strokeDasharray:'4 4', strokeWidth:1.5, label:{ value:'Meta 100%', position:'top', fontSize:11, fill:'hsl(160,60%,52%)', fontWeight:600 } }),
+        React.createElement(Bar, { dataKey:'cobProj', name:'Cob. Projetada', radius:[0,4,4,0], barSize:18 },
+          ...data.map((entry, i) => React.createElement(Cell, { key:i, fill:entry.fill })),
+        )
+      )
+    );
+    ReactDOM.render(chartEl, mount);
+  }
+  if (viewMode === 'delta') {
+    const mount = document.getElementById('delta-chart');
+    if (!mount) return;
+    const sorted = [...rows].sort((a,b) => a.deltaCota - b.deltaCota);
+    const maxAbs = Math.max(...sorted.map(r => Math.abs(r.deltaCota)), 0.001);
+    const isPercent = maxAbs <= 10;
+    const fmtV = v => {
+      if (isPercent) return v.toFixed(2);
+      if (Math.abs(v) >= 1e6) return `${(v/1e6).toFixed(1)}M`;
+      if (Math.abs(v) >= 1000) return `${(v/1000).toFixed(1)}k`;
+      return v.toFixed(0);
+    };
+    const data = sorted.map(r => ({
+      name: r.produto.replace(/ MF_/,'').replace(/ HYQ/,'').replace(/_$/,''),
+      delta: isPercent ? parseFloat(r.deltaCota.toFixed(2)) : parseFloat(r.deltaCota.toFixed(0)),
+      fill: r.deltaCota >= 0 ? 'hsl(160,60%,52%)' : 'hsl(0,72%,62%)',
+      label: fmtV(r.deltaCota),
+    }));
+    const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell, LabelList } = Recharts;
+    const renderLabel = (props) => {
+      const { x, y, width, height, index } = props;
+      const entry = data[index];
+      if (!entry) return null;
+      const isPos = entry.delta >= 0;
+      return React.createElement('text', { x: isPos ? x+width+6 : x+width-6, y: y+height/2, fill:'var(--foreground)', fontSize:10, fontWeight:600, textAnchor: isPos ? 'start' : 'end', dominantBaseline:'middle' }, entry.label);
+    };
+    const chartEl = React.createElement(
+      ResponsiveContainer, { width:'100%', height:'100%' },
+      React.createElement(BarChart, { data, layout:'vertical', margin:{ left:10,right:70 } },
+        React.createElement(CartesianGrid, { strokeDasharray:'3 3', horizontal:false, stroke:'var(--chart-grid)', opacity:0.5 }),
+        React.createElement(XAxis, { type:'number', tick:{ fontSize:11, fill:'var(--chart-text)', fontWeight:500 }, axisLine:{ stroke:'var(--chart-grid)' }, tickLine:{ stroke:'var(--chart-grid)' } }),
+        React.createElement(YAxis, { type:'category', dataKey:'name', tick:{ fontSize:11, fill:'var(--chart-text)', fontWeight:500 }, width:150, axisLine:false, tickLine:false }),
+        React.createElement(Tooltip, { formatter: v => [isPercent ? `${v.toFixed(2)}%` : fmtV(v),'Δ Cota vs Dem. Proj.'], contentStyle:{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:10, color:'var(--foreground)', fontSize:13, fontWeight:600, padding:'10px 14px' } }),
+        React.createElement(ReferenceLine, { x:0, stroke:'var(--foreground)', strokeWidth:1.5 }),
+        React.createElement(Bar, { dataKey:'delta', name:'Δ Cota vs Dem. Proj.', radius:[0,4,4,0], barSize:18 },
+          ...data.map((entry, i) => React.createElement(Cell, { key:i, fill:entry.fill })),
+          React.createElement(LabelList, { content: renderLabel })
+        )
+      )
+    );
+    ReactDOM.render(chartEl, mount);
+  }
+}
+
+// ── Priority Panel ──
+function renderPriorityPanel(rows) {
+  const sorted = [...rows].sort((a,b) => a.cobProjArred - b.cobProjArred);
+  const worst5 = sorted.slice(0, 5);
+  const best5 = [...rows].sort((a,b) => b.cobProjArred - a.cobProjArred).slice(0, 5);
+  const row = (r, isGood) => `<div class="priority-row">
+    <div>
+      <div class="priority-name">${r.produto.replace(/ MF_/,'').replace(/ HYQ/,'').replace(/_$/,'')}</div>
+      <div class="priority-fam">${r.familia}</div>
+    </div>
+    <span class="mono font-bold" style="color:${isGood ? 'var(--success)' : 'var(--danger)'}">${formatPercent(r.cobProjArred)}</span>
+  </div>`;
+  return `<div class="grid g2 gap-4">
+    <div class="card" style="border-color:hsla(5,70%,48%,0.3)">
+      <h3 style="font-size:0.875rem;font-weight:600;color:var(--danger);display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem">${icon('alert-triangle',16)} Atuar Urgente — Maior Gap</h3>
+      ${worst5.map(r => row(r, false)).join('')}
+    </div>
+    <div class="card" style="border-color:hsla(145,55%,42%,0.3)">
+      <h3 style="font-size:0.875rem;font-weight:600;color:var(--success);display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem">${icon('shield-check',16)} Blindar — Melhor Performance</h3>
+      ${best5.map(r => row(r, true)).join('')}
+    </div>
+  </div>`;
+}
+
+// ── Header ──
+function renderHeader(hasDash) {
+  return `<header>
+    <div class="inner">
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <div class="logo">${icon('bar-chart-3',18)}</div>
+        <div>
+          <div class="brand-title">Análise 360° <span class="badge-pro">Pro</span></div>
+          <div class="brand-sub">Cobertura & Delta de Cota</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem">
+        ${hasDash ? `
+          <div class="view-tabs desktop-only">
+            ${Object.entries(VIEW_LABELS).map(([k,l]) => `<button class="view-tab ${viewMode===k?'active':''}" onclick="setView('${k}')">${l}</button>`).join('')}
+          </div>
+          <div class="divider desktop-only"></div>
+          <button class="btn btn-success-soft" id="btn-save" onclick="triggerSave()">
+            ${icon('save',13)} <span style="display:none" id="save-label">Salvar</span>
+          </button>
+          <button class="btn btn-secondary" onclick="exportPDF()" title="Exportar PDF">${icon('download',13)} <span class="desktop-only" style="font-size:0.72rem">PDF</span></button>
+          <button class="btn btn-secondary" onclick="exportPNG()" title="Exportar PNG">${icon('image',13)} <span class="desktop-only" style="font-size:0.72rem">PNG</span></button>
+          <button class="btn btn-secondary" onclick="resetDash()" style="font-size:0.72rem">Novo</button>
+          <div class="divider"></div>
+        ` : ''}
+        <button class="btn-icon btn-ghost" onclick="toggleTheme()" title="Alternar tema">${icon(currentTheme === 'dark' ? 'sun' : 'moon', 16)}</button>
+        <button class="btn-icon btn-ghost danger" onclick="signOut()" title="Sair">${icon('log-out',16)}</button>
+      </div>
+    </div>
+  </header>`;
+}
+
+function attachDashboardListeners() {
+  const saveLabel = document.getElementById('save-label');
+  if (saveLabel) saveLabel.style.display = '';
+  setTimeout(() => mountCharts(activeTab === 'reais' ? dashData.valorRows : dashData.unidadesRows), 100);
+}
+
+// ── Actions ──
+function toggleTheme() { applyTheme(currentTheme === 'dark' ? 'light' : 'dark'); render(); }
+async function signOut() { await sb.auth.signOut(); currentUser = null; dashData = null; render(); }
+function resetDash() { dashData = null; valorFile = null; unidadesFile = null; processError = null; render(); }
+function setTab(t) { activeTab = t; render(); }
+function setView(v) { viewMode = v; render(); }
+
+async function triggerSave() {
+  if (!dashData || savingAnalysis) return;
+  savingAnalysis = true;
+  const btn = document.getElementById('btn-save');
+  if (btn) { btn.disabled = true; btn.innerHTML = `<div class="spinner"></div>`; }
+  try {
+    await saveAnalysis(dashData);
+    toast('Análise salva!', 'success');
+  } catch { toast('Erro ao salvar.', 'error'); }
+  finally {
+    savingAnalysis = false;
+    if (btn) { btn.disabled = false; btn.innerHTML = `${icon('save',13)} <span style="font-size:0.72rem">Salvar</span>`; }
+  }
+}
+
+async function exportPDF() {
+  const el = document.getElementById('dashboard-page');
+  if (!el) return;
+  toast('Gerando PDF...', 'info', 5000);
+  try {
+    const canvas = await html2canvas(el, { scale: 1.5, useCORS: true, backgroundColor: currentTheme === 'dark' ? '#1a1d23' : '#f9f9f9' });
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [canvas.width, canvas.height] });
+    pdf.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, canvas.width, canvas.height);
+    pdf.save('analise-360.pdf');
+    toast('PDF exportado!', 'success');
+  } catch (e) { console.error(e); toast('Erro ao exportar PDF.', 'error'); }
+}
+
+async function exportPNG() {
+  const el = document.getElementById('dashboard-page');
+  if (!el) return;
+  toast('Gerando imagem...', 'info', 5000);
+  try {
+    const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: currentTheme === 'dark' ? '#1a1d23' : '#f9f9f9' });
+    const link = document.createElement('a');
+    link.download = 'analise-360.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    toast('Imagem exportada!', 'success');
+  } catch (e) { console.error(e); toast('Erro ao exportar imagem.', 'error'); }
+}
+
+// ── Load saved analysis on startup ──
+async function tryLoadSaved() {
+  try {
+    const saved = await loadAnalysis();
+    if (saved) { dashData = saved; toast('Análise anterior carregada', 'success'); render(); }
+  } catch (e) { /* ignore */ }
+}
+
+// ── Init ──
+sb.auth.getSession().then(({ data: { session } }) => {
+  currentUser = session?.user ?? null;
+  authLoading = false;
+  render();
+  if (currentUser) tryLoadSaved();
+});
+</script>
+</body>
+</html>
+```
